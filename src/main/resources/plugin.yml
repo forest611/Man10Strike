@@ -15,6 +15,12 @@ commands:
     usage: /<command> [help|reload|join|leave|start|stop]
     aliases: [ms, man10strike]
     permission: man10strike.command
+  
+  mstrikemap:
+    description: Man10Strike マップ管理コマンド
+    usage: /<command> [help|list|info|setup|preview]
+    aliases: [msmap]
+    permission: man10strike.map.command
 
 permissions:
   man10strike.command:
@@ -52,3 +58,13 @@ permissions:
     default: true
     children:
       man10strike.command: true
+  
+  man10strike.map.command:
+    description: マップコマンドの基本使用権限
+    default: true
+  
+  man10strike.map.admin:
+    description: マップ管理権限
+    default: op
+    children:
+      man10strike.map.command: true

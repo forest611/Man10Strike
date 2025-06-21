@@ -1,5 +1,6 @@
 package red.man10.strike.map
 
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.configuration.ConfigurationSection
 
@@ -38,15 +39,14 @@ data class GameMap(
          * ConfigurationSectionから読み込み
          */
         companion object {
-            fun fromConfig(name: String, config: ConfigurationSection): BombSite? {
-                val worldName = config.getString("world") ?: return null
+            fun fromConfig(name: String, config: ConfigurationSection, worldName: String): BombSite? {
+                val world = Bukkit.getWorld(worldName) ?: return null
                 val x = config.getDouble("x")
                 val y = config.getDouble("y")
                 val z = config.getDouble("z")
                 val radius = config.getDouble("radius", 3.0)
                 
-                // ワールドは後でロードする必要があるため、一旦nullで作成
-                val location = Location(null, x, y, z)
+                val location = Location(world, x, y, z)
                 
                 return BombSite(name, location, radius)
             }
@@ -57,18 +57,8 @@ data class GameMap(
      * マップが有効かどうか（すべての必要な要素が揃っているか）
      */
     fun isValid(): Boolean {
-        // ワールドがロードされているか確認
-        if (terroristSpawn.world == null || counterTerroristSpawn.world == null) {
-            return false
-        }
-        
         // 最低1つの爆弾設置ポイントが必要
-        if (bombSites.isEmpty()) {
-            return false
-        }
-        
-        // すべての爆弾設置ポイントのワールドが有効か確認
-        return bombSites.all { it.center.world != null }
+        return bombSites.isNotEmpty()
     }
     
     /**
@@ -82,16 +72,19 @@ data class GameMap(
             val worldName = config.getString("world") ?: return null
             val enabled = config.getBoolean("enabled", true)
             
+            // ワールドを取得
+            val world = Bukkit.getWorld(worldName) ?: return null
+            
             // スポーン地点の読み込み
             val tSpawnSection = config.getConfigurationSection("terrorist-spawn") ?: return null
             val ctSpawnSection = config.getConfigurationSection("counter-terrorist-spawn") ?: return null
             
-            val tSpawn = locationFromConfig(tSpawnSection) ?: return null
-            val ctSpawn = locationFromConfig(ctSpawnSection) ?: return null
+            val tSpawn = locationFromConfig(tSpawnSection, world) ?: return null
+            val ctSpawn = locationFromConfig(ctSpawnSection, world) ?: return null
             
             // 観戦者スポーン地点（オプション）
             val spectatorSpawn = config.getConfigurationSection("spectator-spawn")?.let {
-                locationFromConfig(it)
+                locationFromConfig(it, world)
             }
             
             // 爆弾設置ポイントの読み込み
@@ -100,7 +93,7 @@ data class GameMap(
             
             for (siteName in bombSitesSection.getKeys(false)) {
                 val siteConfig = bombSitesSection.getConfigurationSection(siteName) ?: continue
-                BombSite.fromConfig(siteName, siteConfig)?.let { bombSites.add(it) }
+                BombSite.fromConfig(siteName, siteConfig, worldName)?.let { bombSites.add(it) }
             }
             
             if (bombSites.isEmpty()) return null
@@ -119,15 +112,14 @@ data class GameMap(
             )
         }
         
-        private fun locationFromConfig(config: ConfigurationSection): Location? {
+        private fun locationFromConfig(config: ConfigurationSection, world: org.bukkit.World): Location? {
             val x = config.getDouble("x")
             val y = config.getDouble("y")
             val z = config.getDouble("z")
             val yaw = config.getDouble("yaw", 0.0).toFloat()
             val pitch = config.getDouble("pitch", 0.0).toFloat()
             
-            // ワールドは後でロードする必要があるため、一旦nullで作成
-            return Location(null, x, y, z, yaw, pitch)
+            return Location(world, x, y, z, yaw, pitch)
         }
     }
 }

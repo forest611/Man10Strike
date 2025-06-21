@@ -59,20 +59,7 @@ class MapManager(private val plugin: Man10Strike) {
                     continue
                 }
                 
-                // ワールドをLocationに設定
-                val world = Bukkit.getWorld(gameMap.worldName)
-                if (world == null) {
-                    plugin.logger.warning("${Man10Strike.PREFIX} マップ '$mapId' のワールド '${gameMap.worldName}' が見つかりません")
-                    continue
-                }
-                
-                // ワールドを各Locationに設定
-                gameMap.terroristSpawn.world = world
-                gameMap.counterTerroristSpawn.world = world
-                gameMap.spectatorSpawn?.world = world
-                gameMap.bombSites.forEach { site ->
-                    site.center.world = world
-                }
+                // GameMap内でワールドが設定されているので、ここでの設定は不要
                 
                 // マップが有効か確認
                 if (!gameMap.isValid()) {

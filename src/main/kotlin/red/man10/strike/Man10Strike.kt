@@ -2,6 +2,7 @@ package red.man10.strike
 
 import org.bukkit.plugin.java.JavaPlugin
 import red.man10.strike.commands.StrikeCommand
+import red.man10.strike.commands.StrikeMapCommand
 import red.man10.strike.config.ConfigManager
 import red.man10.strike.game.GameManager
 import red.man10.strike.listeners.PlayerListener
@@ -89,6 +90,13 @@ class Man10Strike : JavaPlugin() {
             it.setExecutor(strikeCommand)
             it.tabCompleter = strikeCommand
         } ?: logger.severe("$PREFIX §cコマンド 'mstrike' の登録に失敗しました")
+        
+        // マップコマンドの登録
+        getCommand("mstrikemap")?.let {
+            val mapCommand = StrikeMapCommand(this)
+            it.setExecutor(mapCommand)
+            it.tabCompleter = mapCommand
+        } ?: logger.severe("$PREFIX §cコマンド 'mstrikemap' の登録に失敗しました")
     }
     
     private fun registerListeners() {
