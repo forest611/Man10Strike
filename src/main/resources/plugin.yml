@@ -1,0 +1,54 @@
+name: Man10Strike
+version: 1.0.0
+main: red.man10.strike.Man10Strike
+api-version: 1.20
+authors: [Jin Morikawa]
+description: Counter-Strike/Valorant style tactical FPS game for Minecraft
+website: https://man10.red
+
+softdepend:
+  - Vault
+
+commands:
+  mstrike:
+    description: Man10Strike メインコマンド
+    usage: /<command> [help|reload|join|leave|start|stop]
+    aliases: [ms, man10strike]
+    permission: man10strike.command
+
+permissions:
+  man10strike.command:
+    description: 基本コマンドの使用権限
+    default: true
+  
+  man10strike.admin:
+    description: 管理者権限
+    default: op
+    children:
+      man10strike.command: true
+      man10strike.reload: true
+      man10strike.start: true
+      man10strike.stop: true
+      man10strike.setup: true
+  
+  man10strike.reload:
+    description: 設定リロード権限
+    default: op
+  
+  man10strike.start:
+    description: ゲーム開始権限
+    default: op
+  
+  man10strike.stop:
+    description: ゲーム停止権限
+    default: op
+  
+  man10strike.setup:
+    description: マップセットアップ権限
+    default: op
+  
+  man10strike.play:
+    description: ゲームプレイ権限
+    default: true
+    children:
+      man10strike.command: true

@@ -1,0 +1,98 @@
+# Man10Strike Configuration
+# Counter-Strike/Valorant style tactical FPS game for Minecraft
+
+# 基本設定
+general:
+  # デバッグモード
+  debug: false
+  # 言語設定
+  language: "ja_JP"
+  # プレイヤー名の表示形式
+  player-name-format: "&7[&c%team%&7] &f%player%"
+
+# ゲーム設定
+game:
+  # 最小プレイヤー数
+  min-players: 2
+  # 最大プレイヤー数（チームごと）
+  max-players-per-team: 5
+  # ラウンド数（先に指定ラウンド勝利したチームの勝ち）
+  rounds-to-win: 13
+  # ラウンド時間（秒）
+  round-time: 120
+  # 爆弾設置時間（秒）
+  bomb-plant-time: 3
+  # 爆弾解除時間（秒）
+  bomb-defuse-time: 5
+  # 爆弾タイマー（秒）
+  bomb-timer: 40
+  # ラウンド開始前の準備時間（秒）
+  preparation-time: 15
+  # リスポーン無効
+  disable-respawn: true
+
+# 経済システム
+economy:
+  # 開始時の所持金
+  start-money: 800
+  # ラウンド勝利報酬
+  win-reward: 3000
+  # ラウンド敗北報酬
+  lose-reward: 1900
+  # キル報酬
+  kill-reward: 300
+  # 爆弾設置報酬
+  plant-reward: 300
+  # 爆弾解除報酬
+  defuse-reward: 300
+  # 最大所持金
+  max-money: 16000
+
+# チーム設定
+teams:
+  # テロリストチーム
+  terrorist:
+    name: "テロリスト"
+    color: "&c"
+    prefix: "T"
+  # カウンターテロリストチーム
+  counter-terrorist:
+    name: "カウンターテロリスト"  
+    color: "&9"
+    prefix: "CT"
+
+# 武器設定（基本設定のみ、詳細は別ファイルで管理予定）
+weapons:
+  # ダメージ倍率
+  damage-multiplier: 1.0
+  # ヘッドショット倍率
+  headshot-multiplier: 2.5
+  # 防具によるダメージ軽減
+  armor-reduction: 0.5
+
+# データベース設定
+database:
+  # データベースを使用するか
+  enabled: false
+  # 接続設定
+  host: "localhost"
+  port: 3306
+  database: "man10strike"
+  username: "root"
+  password: ""
+  # 接続プール設定
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout: 30000
+
+# その他の設定
+misc:
+  # スコアボード表示
+  scoreboard-enabled: true
+  # チャット設定
+  team-chat-enabled: true
+  # 観戦モード
+  spectator-enabled: true
+  # 自動マップローテーション
+  auto-map-rotation: true

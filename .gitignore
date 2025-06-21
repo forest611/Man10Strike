@@ -1,0 +1,47 @@
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+out/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Minecraft Server (テスト用)
+run/
+test-server/
+
+# ログファイル
+*.log
+logs/
+
+# 設定ファイル（ローカル環境用）
+config.local.yml
+*.local.yml
+
+# データベース
+*.db
+*.sqlite
+
+# その他
+*.bak
+*.tmp
+*~
+.claude/
