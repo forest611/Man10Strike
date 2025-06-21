@@ -1,0 +1,39 @@
+# Mirage マップ設定
+# 中東の街を舞台にした人気マップ
+
+display-name: "Mirage"
+description: "中東の街を舞台にした人気マップ"
+author: "Man10Team"
+world: "world"
+enabled: false  # このマップは無効化されています
+
+# テロリストのスポーン地点
+terrorist-spawn:
+  x: 200.5
+  y: 64.0
+  z: 200.5
+  yaw: 0.0
+  pitch: 0.0
+
+# カウンターテロリストのスポーン地点
+counter-terrorist-spawn:
+  x: -200.5
+  y: 64.0
+  z: -200.5
+  yaw: 180.0
+  pitch: 0.0
+
+# 爆弾設置ポイント
+bomb-sites:
+  A:
+    world: "world"
+    x: 150.5
+    y: 64.0
+    z: 150.5
+    radius: 4.5
+  B:
+    world: "world"
+    x: -150.5
+    y: 64.0
+    z: -150.5
+    radius: 4.5

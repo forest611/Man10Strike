@@ -1,0 +1,47 @@
+# Dust II マップ設定
+# 砂漠の街を舞台にした定番マップ
+
+display-name: "Dust II"
+description: "砂漠の街を舞台にした定番マップ"
+author: "Man10Team"
+world: "world"  # マップが存在するワールド名
+enabled: true
+
+# テロリストのスポーン地点
+terrorist-spawn:
+  x: 100.5
+  y: 64.0
+  z: 100.5
+  yaw: 90.0
+  pitch: 0.0
+
+# カウンターテロリストのスポーン地点  
+counter-terrorist-spawn:
+  x: -100.5
+  y: 64.0
+  z: -100.5
+  yaw: -90.0
+  pitch: 0.0
+
+# 観戦者のスポーン地点（オプション）
+spectator-spawn:
+  x: 0.5
+  y: 80.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 45.0
+
+# 爆弾設置ポイント
+bomb-sites:
+  A:  # Aサイト
+    world: "world"
+    x: 50.5
+    y: 64.0
+    z: 50.5
+    radius: 5.0  # 設置可能範囲（半径）
+  B:  # Bサイト
+    world: "world"
+    x: -50.5
+    y: 64.0
+    z: -50.5
+    radius: 4.0

@@ -1,10 +1,11 @@
 package red.man10.strike
 
 import org.bukkit.plugin.java.JavaPlugin
+import red.man10.strike.commands.StrikeCommand
 import red.man10.strike.config.ConfigManager
 import red.man10.strike.game.GameManager
 import red.man10.strike.listeners.PlayerListener
-import red.man10.strike.commands.StrikeCommand
+import red.man10.strike.map.MapManager
 import red.man10.strike.utils.VaultManager
 import java.util.logging.Logger
 
@@ -14,8 +15,8 @@ class Man10Strike : JavaPlugin() {
         lateinit var instance: Man10Strike
             private set
         
-        lateinit var logger: Logger
-            private set
+        val logger: Logger
+            get() = instance.logger
         
         const val PREFIX = "§c§l[Man10Strike]§r"
         const val PERMISSION_PREFIX = "man10strike"
@@ -23,6 +24,9 @@ class Man10Strike : JavaPlugin() {
     
     // マネージャークラス
     lateinit var configManager: ConfigManager
+        private set
+    
+    lateinit var mapManager: MapManager
         private set
     
     lateinit var gameManager: GameManager
@@ -33,7 +37,6 @@ class Man10Strike : JavaPlugin() {
     
     override fun onEnable() {
         instance = this
-        logger = this.logger
         
         // 設定ファイルの初期化
         saveDefaultConfig()
@@ -66,6 +69,9 @@ class Man10Strike : JavaPlugin() {
         configManager = ConfigManager(this)
         configManager.reload()
         
+        // マップマネージャー
+        mapManager = MapManager(this)
+        
         // Vaultマネージャー（経済システム連携）
         vaultManager = VaultManager(this)
         if (!vaultManager.setupEconomy()) {
@@ -93,6 +99,7 @@ class Man10Strike : JavaPlugin() {
     fun reload() {
         reloadConfig()
         configManager.reload()
+        mapManager.reload()
         logger.info("$PREFIX §a設定をリロードしました")
     }
 }
