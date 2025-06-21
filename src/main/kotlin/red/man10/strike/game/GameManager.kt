@@ -153,6 +153,20 @@ class GameManager(private val plugin: Man10Strike) {
     }
     
     /**
+     * ゲーム用のマップを選択
+     */
+    fun selectMapForGame(game: Game): GameMap? {
+        // すでにマップが設定されている場合はそれを返す
+        game.map?.let { return it }
+        
+        val availableMap = findAvailableMap()
+        if (availableMap != null) {
+            usedMaps[availableMap.id] = game.gameId
+        }
+        return availableMap
+    }
+    
+    /**
      * すべてのゲームを強制終了
      */
     fun shutdown() {
