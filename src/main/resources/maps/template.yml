@@ -8,6 +8,15 @@ author: "作成者名"
 world: "world"  # マップが存在するワールド名
 enabled: true   # false にするとマップが無効化されます
 
+# 待機地点（ロビー）
+# ゲーム開始前にプレイヤーが集まる場所
+lobby-spawn:
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+
 # テロリストのスポーン地点
 terrorist-spawn:
   x: 0.5

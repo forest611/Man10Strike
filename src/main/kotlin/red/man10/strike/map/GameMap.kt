@@ -13,6 +13,7 @@ data class GameMap(
     val description: String = "",       // マップの説明
     val author: String = "Unknown",     // マップ作成者
     val worldName: String,              // ワールド名
+    val lobbySpawn: Location,           // 待機地点（ロビー）
     val terroristSpawn: Location,       // テロリストのスポーン地点
     val counterTerroristSpawn: Location, // カウンターテロリストのスポーン地点
     val bombSites: List<BombSite>,     // 爆弾設置ポイントのリスト
@@ -76,9 +77,11 @@ data class GameMap(
             val world = Bukkit.getWorld(worldName) ?: return null
             
             // スポーン地点の読み込み
+            val lobbySpawnSection = config.getConfigurationSection("lobby-spawn") ?: return null
             val tSpawnSection = config.getConfigurationSection("terrorist-spawn") ?: return null
             val ctSpawnSection = config.getConfigurationSection("counter-terrorist-spawn") ?: return null
             
+            val lobbySpawn = locationFromConfig(lobbySpawnSection, world) ?: return null
             val tSpawn = locationFromConfig(tSpawnSection, world) ?: return null
             val ctSpawn = locationFromConfig(ctSpawnSection, world) ?: return null
             
@@ -104,6 +107,7 @@ data class GameMap(
                 description = description,
                 author = author,
                 worldName = worldName,
+                lobbySpawn = lobbySpawn,
                 terroristSpawn = tSpawn,
                 counterTerroristSpawn = ctSpawn,
                 bombSites = bombSites,

@@ -118,6 +118,7 @@ class MapManager(private val plugin: Man10Strike) {
         config.set("enabled", map.enabled)
         
         // スポーン地点の保存
+        saveLocation(config.createSection("lobby-spawn"), map.lobbySpawn)
         saveLocation(config.createSection("terrorist-spawn"), map.terroristSpawn)
         saveLocation(config.createSection("counter-terrorist-spawn"), map.counterTerroristSpawn)
         

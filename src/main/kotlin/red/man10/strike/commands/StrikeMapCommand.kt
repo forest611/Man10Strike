@@ -35,6 +35,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
             
             // 個別修正コマンド
             "setspawn" -> setSpawnCommand(sender, args)
+            "setlobby" -> setLobbyCommand(sender, args)
             "setbomb" -> setBombCommand(sender, args)
             "setbombradius" -> setBombRadiusCommand(sender, args)
             "setname" -> setNameCommand(sender, args)
@@ -67,7 +68,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
             
             if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.map.admin")) {
                 commands.addAll(listOf(
-                    "setup", "setspawn", "setbomb", "setbombradius",
+                    "setup", "setspawn", "setlobby", "setbomb", "setbombradius",
                     "setname", "setauthor", "setdesc", "enable", "disable",
                     "copy", "delete", "reload"
                 ))
@@ -79,7 +80,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         // マップ名の補完
         if (args.size == 2) {
             when (args[0].lowercase()) {
-                "info", "setspawn", "setbomb", "setbombradius",
+                "info", "setspawn", "setlobby", "setbomb", "setbombradius",
                 "setname", "setauthor", "setdesc", "enable", "disable",
                 "copy", "delete" -> {
                     return plugin.mapManager.getAllMaps().map { it.id }
@@ -117,6 +118,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.map.admin")) {
             sender.sendMessage("§c===== Admin Commands =====")
             sender.sendMessage("§c/msmap setup <マップ名> §f- 新しいマップをセットアップ")
+            sender.sendMessage("§c/msmap setlobby <マップ名> §f- 待機地点（ロビー）を設定")
             sender.sendMessage("§c/msmap setspawn <マップ名> <t/ct> §f- スポーン地点を設定")
             sender.sendMessage("§c/msmap setbomb <マップ名> <A/B> §f- 爆弾サイトを設定")
             sender.sendMessage("§c/msmap setbombradius <マップ名> <A/B> <半径> §f- 爆弾サイトの半径を設定")
@@ -168,6 +170,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         sender.sendMessage("§eワールド: §f${map.worldName}")
         sender.sendMessage("§e状態: §f${if (map.enabled) "§a有効" else "§c無効"}")
         sender.sendMessage("§e--- スポーン地点 ---")
+        sender.sendMessage("§a  待機地点: §f${formatLocation(map.lobbySpawn)}")
         sender.sendMessage("§c  Tスポーン: §f${formatLocation(map.terroristSpawn)}")
         sender.sendMessage("§9  CTスポーン: §f${formatLocation(map.counterTerroristSpawn)}")
         sender.sendMessage("§e--- 爆弾設置サイト ---")
@@ -278,6 +281,33 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
                 sender.sendMessage("${Man10Strike.PREFIX} §c無効なチーム名です。t/ct を指定してください")
             }
         }
+    }
+    
+    private fun setLobbyCommand(sender: CommandSender, args: Array<out String>) {
+        if (!sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.map.admin")) {
+            sender.sendMessage("${Man10Strike.PREFIX} §c権限がありません")
+            return
+        }
+        
+        if (sender !is Player) {
+            sender.sendMessage("${Man10Strike.PREFIX} §cこのコマンドはプレイヤーのみ実行できます")
+            return
+        }
+        
+        if (args.size < 2) {
+            sender.sendMessage("${Man10Strike.PREFIX} §c使用方法: /msmap setlobby <マップ名>")
+            return
+        }
+        
+        val map = plugin.mapManager.getMap(args[1])
+        if (map == null) {
+            sender.sendMessage("${Man10Strike.PREFIX} §cマップ '${args[1]}' が見つかりません")
+            return
+        }
+        
+        val location = sender.location
+        updateMapLocation(map, map.copy(lobbySpawn = location))
+        sender.sendMessage("${Man10Strike.PREFIX} §a待機地点を更新しました")
     }
     
     private fun setBombCommand(sender: CommandSender, args: Array<out String>) {

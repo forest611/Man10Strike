@@ -22,6 +22,7 @@ class MapSetupWizard(
     
     enum class SetupStep {
         MAP_NAME,           // マップ表示名
+        LOBBY_SPAWN,        // 待機地点（ロビー）
         T_SPAWN,            // テロリストスポーン
         CT_SPAWN,           // カウンターテロリストスポーン
         BOMB_SITE_A,        // 爆弾設置サイトA
@@ -68,43 +69,47 @@ class MapSetupWizard(
     private fun showCurrentStep() {
         when (currentStep) {
             SetupStep.MAP_NAME -> {
-                player.sendMessage("§6[ステップ 1/9] マップの表示名")
+                player.sendMessage("§6[ステップ 1/10] マップの表示名")
                 player.sendMessage("§fこのマップの表示名を入力してください（例: Dust II）")
             }
+            SetupStep.LOBBY_SPAWN -> {
+                player.sendMessage("§6[ステップ 2/10] 待機地点（ロビー）")
+                player.sendMessage("§fプレイヤーが待機するロビーの地点に立って、§a'confirm' §fと入力してください")
+            }
             SetupStep.T_SPAWN -> {
-                player.sendMessage("§6[ステップ 2/9] テロリストスポーン地点")
+                player.sendMessage("§6[ステップ 3/10] テロリストスポーン地点")
                 player.sendMessage("§fテロリストのスポーン地点に立って、§a'confirm' §fと入力してください")
             }
             SetupStep.CT_SPAWN -> {
-                player.sendMessage("§6[ステップ 3/9] カウンターテロリストスポーン地点")
+                player.sendMessage("§6[ステップ 4/10] カウンターテロリストスポーン地点")
                 player.sendMessage("§fカウンターテロリストのスポーン地点に立って、§a'confirm' §fと入力してください")
             }
             SetupStep.BOMB_SITE_A -> {
-                player.sendMessage("§6[ステップ 4/9] 爆弾設置サイトA")
+                player.sendMessage("§6[ステップ 5/10] 爆弾設置サイトA")
                 player.sendMessage("§fサイトAの中心地点に立って、§a'confirm' §fと入力してください")
             }
             SetupStep.BOMB_SITE_A_RADIUS -> {
-                player.sendMessage("§6[ステップ 5/9] サイトAの半径")
+                player.sendMessage("§6[ステップ 6/10] サイトAの半径")
                 player.sendMessage("§fサイトAの設置可能範囲（半径）を数値で入力してください")
                 player.sendMessage("§7デフォルト: 5.0、推奨: 3.0～7.0")
             }
             SetupStep.BOMB_SITE_B -> {
-                player.sendMessage("§6[ステップ 6/9] 爆弾設置サイトB")
+                player.sendMessage("§6[ステップ 7/10] 爆弾設置サイトB")
                 player.sendMessage("§fサイトBの中心地点に立って、§a'confirm' §fと入力してください")
                 player.sendMessage("§7※ サイトBが不要な場合は §e'skip' §7と入力")
             }
             SetupStep.BOMB_SITE_B_RADIUS -> {
-                player.sendMessage("§6[ステップ 7/9] サイトBの半径")
+                player.sendMessage("§6[ステップ 8/10] サイトBの半径")
                 player.sendMessage("§fサイトBの設置可能範囲（半径）を数値で入力してください")
                 player.sendMessage("§7デフォルト: 5.0、推奨: 3.0～7.0")
             }
             SetupStep.AUTHOR -> {
-                player.sendMessage("§6[ステップ 8/9] 作成者名")
+                player.sendMessage("§6[ステップ 9/10] 作成者名")
                 player.sendMessage("§fマップの作成者名を入力してください")
                 player.sendMessage("§7※ スキップする場合は §e'skip' §7と入力")
             }
             SetupStep.DESCRIPTION -> {
-                player.sendMessage("§6[ステップ 9/9] マップの説明")
+                player.sendMessage("§6[ステップ 10/10] マップの説明")
                 player.sendMessage("§fマップの説明を入力してください")
                 player.sendMessage("§7※ スキップする場合は §e'skip' §7と入力")
             }
@@ -148,6 +153,16 @@ class MapSetupWizard(
                 }
                 setupData["displayName"] = input
                 nextStep()
+            }
+            
+            SetupStep.LOBBY_SPAWN -> {
+                if (input.lowercase() == "confirm") {
+                    setupData["lobbySpawn"] = player.location.clone()
+                    player.sendMessage("${Man10Strike.PREFIX} §a待機地点を設定しました")
+                    nextStep()
+                } else {
+                    player.sendMessage("${Man10Strike.PREFIX} §c設定する位置に立って 'confirm' と入力してください")
+                }
             }
             
             SetupStep.T_SPAWN -> {
@@ -291,6 +306,7 @@ class MapSetupWizard(
             description = setupData["description"] as String,
             author = setupData["author"] as String,
             worldName = player.world.name,
+            lobbySpawn = setupData["lobbySpawn"] as Location,
             terroristSpawn = setupData["tSpawn"] as Location,
             counterTerroristSpawn = setupData["ctSpawn"] as Location,
             bombSites = bombSites,
