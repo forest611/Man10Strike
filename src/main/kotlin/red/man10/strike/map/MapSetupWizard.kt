@@ -5,7 +5,8 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
-import org.bukkit.event.player.AsyncPlayerChatEvent
+import io.papermc.paper.event.player.AsyncChatEvent
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.event.player.PlayerQuitEvent
 import red.man10.strike.Man10Strike
 import java.util.UUID
@@ -114,11 +115,11 @@ class MapSetupWizard(
     }
     
     @EventHandler
-    fun onChat(event: AsyncPlayerChatEvent) {
+    fun onChat(event: AsyncChatEvent) {
         if (event.player.uniqueId != player.uniqueId) return
         
         event.isCancelled = true
-        val input = event.message.trim()
+        val input = PlainTextComponentSerializer.plainText().serialize(event.message()).trim()
         
         // 共通コマンドの処理
         when (input.lowercase()) {

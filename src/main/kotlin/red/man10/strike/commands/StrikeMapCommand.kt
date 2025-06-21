@@ -1,7 +1,6 @@
 package red.man10.strike.commands
 
 import org.bukkit.Bukkit
-import org.bukkit.Particle
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -32,8 +31,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
             "list" -> listCommand(sender)
             "info" -> infoCommand(sender, args)
             "setup" -> setupCommand(sender, args)
-            "preview" -> previewCommand(sender, args)
-            "whereami" -> whereamiCommand(sender)
+            "where" -> whereCommand(sender)
             
             // 個別修正コマンド
             "setspawn" -> setSpawnCommand(sender, args)
@@ -65,7 +63,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         args: Array<out String>
     ): List<String> {
         if (args.size == 1) {
-            val commands = mutableListOf("help", "list", "info", "preview", "whereami")
+            val commands = mutableListOf("help", "list", "info", "where")
             
             if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.map.admin")) {
                 commands.addAll(listOf(
@@ -81,7 +79,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         // マップ名の補完
         if (args.size == 2) {
             when (args[0].lowercase()) {
-                "info", "preview", "setspawn", "setbomb", "setbombradius",
+                "info", "setspawn", "setbomb", "setbombradius",
                 "setname", "setauthor", "setdesc", "enable", "disable",
                 "copy", "delete" -> {
                     return plugin.mapManager.getAllMaps().map { it.id }
@@ -114,8 +112,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         sender.sendMessage("§6§l========== Man10Strike マップコマンド ==========")
         sender.sendMessage("§e/msmap list §f- マップ一覧を表示")
         sender.sendMessage("§e/msmap info <マップ名> §f- マップ情報を表示")
-        sender.sendMessage("§e/msmap preview <マップ名> §f- マップをプレビュー")
-        sender.sendMessage("§e/msmap whereami §f- 現在地の情報を表示")
+        sender.sendMessage("§e/msmap where §f- 現在地の情報を表示")
         
         if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.map.admin")) {
             sender.sendMessage("§c===== Admin Commands =====")
@@ -208,52 +205,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         MapSetupWizard(plugin, sender, mapId)
     }
     
-    private fun previewCommand(sender: CommandSender, args: Array<out String>) {
-        if (sender !is Player) {
-            sender.sendMessage("${Man10Strike.PREFIX} §cこのコマンドはプレイヤーのみ実行できます")
-            return
-        }
-        
-        if (args.size < 2) {
-            sender.sendMessage("${Man10Strike.PREFIX} §c使用方法: /msmap preview <マップ名>")
-            return
-        }
-        
-        val map = plugin.mapManager.getMap(args[1])
-        if (map == null) {
-            sender.sendMessage("${Man10Strike.PREFIX} §cマップ '${args[1]}' が見つかりません")
-            return
-        }
-        
-        if (sender.world.name != map.worldName) {
-            sender.sendMessage("${Man10Strike.PREFIX} §cこのマップは別のワールド (${map.worldName}) にあります")
-            return
-        }
-        
-        sender.sendMessage("${Man10Strike.PREFIX} §aマップ '${map.displayName}' のプレビューを表示します（10秒間）")
-        
-        // パーティクルでプレビュー表示（10秒間、0.5秒ごと）
-        var count = 0
-        plugin.server.scheduler.runTaskTimer(plugin, { task ->
-            if (count++ >= 20) {
-                task.cancel()
-                sender.sendMessage("${Man10Strike.PREFIX} §aプレビューを終了しました")
-                return@runTaskTimer
-            }
-            
-            // スポーン地点
-            showBeacon(sender, map.terroristSpawn, Particle.REDSTONE, org.bukkit.Color.RED)
-            showBeacon(sender, map.counterTerroristSpawn, Particle.REDSTONE, org.bukkit.Color.BLUE)
-            
-            // 爆弾設置サイト
-            map.bombSites.forEach { site ->
-                showCircle(sender, site.center, site.radius, Particle.END_ROD)
-                showText(sender, site.center.clone().add(0.0, 2.0, 0.0), "§e§lサイト${site.name}")
-            }
-        }, 0L, 10L)
-    }
-    
-    private fun whereamiCommand(sender: CommandSender) {
+    private fun whereCommand(sender: CommandSender) {
         if (sender !is Player) {
             sender.sendMessage("${Man10Strike.PREFIX} §cこのコマンドはプレイヤーのみ実行できます")
             return
@@ -595,28 +547,5 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
     private fun updateMapLocation(oldMap: GameMap, newMap: GameMap) {
         plugin.mapManager.addMap(newMap)
         plugin.mapManager.saveMap(newMap.id, newMap)
-    }
-    
-    private fun showBeacon(player: Player, location: org.bukkit.Location, particle: Particle, color: org.bukkit.Color) {
-        for (y in 0..10) {
-            val dustOptions = Particle.DustOptions(color, 1.5f)
-            player.spawnParticle(particle, location.clone().add(0.0, y.toDouble(), 0.0), 1, 0.0, 0.0, 0.0, 0.0, dustOptions)
-        }
-    }
-    
-    private fun showCircle(player: Player, center: org.bukkit.Location, radius: Double, particle: Particle) {
-        val points = 32
-        for (i in 0 until points) {
-            val angle = 2 * Math.PI * i / points
-            val x = center.x + radius * Math.cos(angle)
-            val z = center.z + radius * Math.sin(angle)
-            val loc = org.bukkit.Location(center.world, x, center.y, z)
-            player.spawnParticle(particle, loc, 1, 0.0, 0.0, 0.0, 0.0)
-        }
-    }
-    
-    private fun showText(player: Player, location: org.bukkit.Location, text: String) {
-        // アーマースタンドを使用したテキスト表示は複雑なため、ここではチャットで代替
-        // 実際の実装では、ホログラムAPIを使用することを推奨
     }
 }
