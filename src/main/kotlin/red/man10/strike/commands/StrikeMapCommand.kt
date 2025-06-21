@@ -97,7 +97,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
         // 追加の引数補完
         if (args.size == 3) {
             when (args[0].lowercase()) {
-                "setspawn" -> return listOf("t", "ct", "terrorist", "counter-terrorist")
+                "setspawn" -> return listOf("t", "ct", "terrorist", "counter-terrorist", "spectator")
                     .filter { it.startsWith(args[2].lowercase()) }
                 "setbomb", "setbombradius" -> return listOf("A", "B", "a", "b")
                     .filter { it.startsWith(args[2].lowercase()) }
@@ -119,7 +119,7 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
             sender.sendMessage("§c===== Admin Commands =====")
             sender.sendMessage("§c/msmap setup <マップ名> §f- 新しいマップをセットアップ")
             sender.sendMessage("§c/msmap setlobby <マップ名> §f- 待機地点（ロビー）を設定")
-            sender.sendMessage("§c/msmap setspawn <マップ名> <t/ct> §f- スポーン地点を設定")
+            sender.sendMessage("§c/msmap setspawn <マップ名> <t/ct/spectator> §f- スポーン地点を設定")
             sender.sendMessage("§c/msmap setbomb <マップ名> <A/B> §f- 爆弾サイトを設定")
             sender.sendMessage("§c/msmap setbombradius <マップ名> <A/B> <半径> §f- 爆弾サイトの半径を設定")
             sender.sendMessage("§c/msmap setname <マップ名> <表示名> §f- 表示名を変更")
@@ -277,8 +277,16 @@ class StrikeMapCommand(private val plugin: Man10Strike) : CommandExecutor, TabCo
                 updateMapLocation(map, map.copy(counterTerroristSpawn = location))
                 sender.sendMessage("${Man10Strike.PREFIX} §aカウンターテロリストのスポーン地点を更新しました")
             }
+            "spectator" -> {
+                if (map.spectatorSpawn != null) {
+                    updateMapLocation(map, map.copy(spectatorSpawn = location))
+                    sender.sendMessage("${Man10Strike.PREFIX} §a観戦者のスポーン地点を更新しました")
+                } else {
+                    sender.sendMessage("${Man10Strike.PREFIX} §cこのマップは観戦者スポーンをサポートしていません")
+                }
+            }
             else -> {
-                sender.sendMessage("${Man10Strike.PREFIX} §c無効なチーム名です。t/ct を指定してください")
+                sender.sendMessage("${Man10Strike.PREFIX} §c無効なチーム名です。t/ct/spectator を指定してください")
             }
         }
     }
