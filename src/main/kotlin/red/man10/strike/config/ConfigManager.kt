@@ -12,6 +12,8 @@ class ConfigManager(private val plugin: Man10Strike) {
         private set
     var maxPlayersPerTeam: Int = 5
         private set
+    var maxConcurrentGames: Int = 3
+        private set
     var roundsToWin: Int = 13
         private set
     var roundTime: Int = 120
@@ -58,8 +60,6 @@ class ConfigManager(private val plugin: Man10Strike) {
     // その他の設定
     var debug: Boolean = false
         private set
-    var language: String = "ja_JP"
-        private set
     
     fun reload() {
         plugin.reloadConfig()
@@ -72,6 +72,7 @@ class ConfigManager(private val plugin: Man10Strike) {
         config.getConfigurationSection("game")?.let { game ->
             minPlayers = game.getInt("min-players", 2)
             maxPlayersPerTeam = game.getInt("max-players-per-team", 5)
+            maxConcurrentGames = game.getInt("max-concurrent-games", 3)
             roundsToWin = game.getInt("rounds-to-win", 13)
             roundTime = game.getInt("round-time", 120)
             bombPlantTime = game.getInt("bomb-plant-time", 3)
@@ -104,7 +105,6 @@ class ConfigManager(private val plugin: Man10Strike) {
         // その他の設定
         config.getConfigurationSection("general")?.let { general ->
             debug = general.getBoolean("debug", false)
-            language = general.getString("language", "ja_JP") ?: "ja_JP"
         }
     }
     

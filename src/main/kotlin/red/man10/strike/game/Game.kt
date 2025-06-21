@@ -2,6 +2,7 @@ package red.man10.strike.game
 
 import org.bukkit.entity.Player
 import red.man10.strike.Man10Strike
+import red.man10.strike.map.GameMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -21,6 +22,10 @@ class Game(private val plugin: Man10Strike) {
     // プレイヤー管理
     private val players = ConcurrentHashMap<UUID, Player>()
     private val maxPlayers = plugin.configManager.maxPlayersPerTeam * 2
+    
+    // マップ設定
+    var map: GameMap? = null
+        private set
     
     // 現在のラウンド
     var currentRound = 0
@@ -92,14 +97,27 @@ class Game(private val plugin: Man10Strike) {
     }
     
     /**
+     * マップを設定
+     */
+    fun setMap(gameMap: GameMap) {
+        this.map = gameMap
+        broadcast("§aマップ: §e${gameMap.displayName}")
+    }
+    
+    /**
      * ゲームを開始
      */
     fun start() {
         if (state != State.STARTING) return
+        if (map == null) {
+            broadcast("§cマップが設定されていないため、ゲームを開始できません")
+            return
+        }
         
         state = State.IN_PROGRESS
         currentRound = 1
         broadcast("§6§l=== ゲーム開始！ ===")
+        broadcast("§eマップ: §f${map!!.displayName}")
         
         // TODO: チーム分け、初期装備、テレポートなどの実装
     }
@@ -113,6 +131,9 @@ class Game(private val plugin: Man10Strike) {
         
         // プレイヤーをクリア
         players.clear()
+        
+        // GameManagerに終了を通知
+        plugin.gameManager.onGameEnd(this)
         
         // TODO: プレイヤーの状態リセット、元の場所へのテレポートなど
     }

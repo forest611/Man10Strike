@@ -2,6 +2,7 @@ package red.man10.strike.game
 
 import org.bukkit.entity.Player
 import red.man10.strike.Man10Strike
+import red.man10.strike.map.GameMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -19,11 +20,14 @@ class GameManager(private val plugin: Man10Strike) {
     var gameState: GameState = GameState.WAITING
         private set
     
-    // アクティブなゲーム（将来的には複数ゲーム対応予定）
+    // アクティブなゲーム
     private val activeGames = ConcurrentHashMap<UUID, Game>()
     
     // プレイヤーとゲームのマッピング
     private val playerGameMap = ConcurrentHashMap<UUID, UUID>()
+    
+    // 使用中のマップ（マップIDとゲームIDのマッピング）
+    private val usedMaps = ConcurrentHashMap<String, UUID>()
     
     init {
         plugin.logger.info("${Man10Strike.PREFIX} §aゲームマネージャーを初期化しました")
@@ -39,8 +43,20 @@ class GameManager(private val plugin: Man10Strike) {
             return false
         }
         
-        // 利用可能なゲームを探す（現在は単一ゲームのみ）
-        val game = findAvailableGame() ?: createNewGame()
+        // 利用可能なゲームを探すか、新しく作成
+        val game = findAvailableGame() ?: run {
+            // 最大開催数チェック
+            if (activeGames.size >= plugin.configManager.maxConcurrentGames) {
+                player.sendMessage("${Man10Strike.PREFIX} §c現在、すべてのゲームが進行中です")
+                return false
+            }
+            createNewGame()
+        }
+        
+        if (game == null) {
+            player.sendMessage("${Man10Strike.PREFIX} §c利用可能なゲームがありません")
+            return false
+        }
         
         if (game.addPlayer(player)) {
             playerGameMap[player.uniqueId] = game.gameId
@@ -69,6 +85,10 @@ class GameManager(private val plugin: Man10Strike) {
             // ゲームが空になったら削除
             if (game.isEmpty()) {
                 activeGames.remove(gameId)
+                // マップの使用状態も解除
+                game.map?.let { map ->
+                    usedMaps.remove(map.id)
+                }
             }
             return true
         }
@@ -103,11 +123,33 @@ class GameManager(private val plugin: Man10Strike) {
     /**
      * 新しいゲームを作成
      */
-    private fun createNewGame(): Game {
+    private fun createNewGame(): Game? {
+        // 利用可能なマップを取得
+        val availableMap = findAvailableMap()
+        if (availableMap == null) {
+            plugin.logger.warning("${Man10Strike.PREFIX} §e利用可能なマップがありません")
+            return null
+        }
+        
         val game = Game(plugin)
+        game.setMap(availableMap)
         activeGames[game.gameId] = game
-        plugin.logger.info("${Man10Strike.PREFIX} §a新しいゲームを作成しました: ${game.gameId}")
+        usedMaps[availableMap.id] = game.gameId
+        
+        plugin.logger.info("${Man10Strike.PREFIX} §a新しいゲームを作成しました: ${game.gameId} (マップ: ${availableMap.displayName})")
         return game
+    }
+    
+    /**
+     * 利用可能なマップを探す
+     */
+    private fun findAvailableMap(): GameMap? {
+        val enabledMaps = plugin.mapManager.getEnabledMaps()
+        
+        // 使用されていないマップを探す
+        return enabledMaps.firstOrNull { map ->
+            !usedMaps.containsKey(map.id)
+        }
     }
     
     /**
@@ -119,6 +161,24 @@ class GameManager(private val plugin: Man10Strike) {
         }
         activeGames.clear()
         playerGameMap.clear()
+        usedMaps.clear()
+    }
+    
+    /**
+     * ゲーム終了時の処理
+     */
+    fun onGameEnd(game: Game) {
+        // プレイヤーマッピングのクリーンアップ
+        playerGameMap.entries.removeIf { it.value == game.gameId }
+        
+        // ゲームを削除
+        activeGames.remove(game.gameId)
+        
+        // マップの使用状態を解除
+        game.map?.let { map ->
+            usedMaps.remove(map.id)
+            plugin.logger.info("${Man10Strike.PREFIX} §aマップ '${map.displayName}' が再び利用可能になりました")
+        }
     }
     
     /**
@@ -133,5 +193,19 @@ class GameManager(private val plugin: Man10Strike) {
      */
     fun getTotalPlayerCount(): Int {
         return playerGameMap.size
+    }
+    
+    /**
+     * 使用中のマップを取得
+     */
+    fun getUsedMaps(): Set<String> {
+        return usedMaps.keys.toSet()
+    }
+    
+    /**
+     * アクティブなゲームのリストを取得
+     */
+    fun getActiveGames(): List<Game> {
+        return activeGames.values.toList()
     }
 }
