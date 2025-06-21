@@ -86,6 +86,19 @@ database:
     minimum-idle: 2
     connection-timeout: 30000
 
+# ロビー設定
+lobby:
+  # メインロビーのスポーン地点
+  # ゲーム終了時やプラグイン参加時の初期位置
+  # /mstrike setlobby コマンドで設定可能
+  main-spawn:
+    world: "world"
+    x: 0.5
+    y: 64.0
+    z: 0.5
+    yaw: 0.0
+    pitch: 0.0
+
 # その他の設定
 misc:
   # スコアボード表示

@@ -1,5 +1,6 @@
 package red.man10.strike.config
 
+import org.bukkit.Location
 import org.bukkit.configuration.file.FileConfiguration
 import red.man10.strike.Man10Strike
 
@@ -61,6 +62,10 @@ class ConfigManager(private val plugin: Man10Strike) {
     var debug: Boolean = false
         private set
     
+    // ロビー設定
+    var mainLobbyLocation: Location? = null
+        private set
+    
     fun reload() {
         plugin.reloadConfig()
         config = plugin.config
@@ -106,6 +111,20 @@ class ConfigManager(private val plugin: Man10Strike) {
         config.getConfigurationSection("general")?.let { general ->
             debug = general.getBoolean("debug", false)
         }
+        
+        // ロビー設定の読み込み
+        config.getConfigurationSection("lobby")?.let { lobby ->
+            mainLobbyLocation = lobby.getLocation("main-spawn")
+        }
+    }
+    
+    /**
+     * メインロビーの位置を設定
+     */
+    fun setMainLobbyLocation(location: Location) {
+        mainLobbyLocation = location
+        config.set("lobby.main-spawn", location)
+        plugin.saveConfig()
     }
     
     fun getTeamName(team: String): String {

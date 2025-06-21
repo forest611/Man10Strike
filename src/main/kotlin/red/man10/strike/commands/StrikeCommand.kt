@@ -24,6 +24,7 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
             "start" -> startCommand(sender)
             "stop" -> stopCommand(sender)
             "info" -> infoCommand(sender)
+            "setlobby" -> setLobbyCommand(sender)
             "map", "maps" -> mapCommand(sender, args.drop(1).toTypedArray())
             else -> {
                 sender.sendMessage("${Man10Strike.PREFIX} §c不明なコマンドです。/mstrike help でヘルプを確認してください。")
@@ -38,7 +39,7 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
             val commands = mutableListOf("help", "join", "leave", "info", "map")
             
             if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.admin")) {
-                commands.addAll(listOf("reload", "start", "stop"))
+                commands.addAll(listOf("reload", "start", "stop", "setlobby"))
             }
             
             return commands.filter { it.startsWith(args[0].lowercase()) }
@@ -82,6 +83,7 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
             sender.sendMessage("§c/mstrike reload §f- 設定をリロード")
             sender.sendMessage("§c/mstrike start §f- ゲームを強制開始")
             sender.sendMessage("§c/mstrike stop §f- ゲームを強制終了")
+            sender.sendMessage("§c/mstrike setlobby §f- メインロビーの位置を設定")
             sender.sendMessage("§c/mstrike map reload §f- マップ設定をリロード")
             sender.sendMessage("§c/mstrike map setspawn <マップ名> <t/ct/spectator> §f- スポーン地点を設定")
             sender.sendMessage("§c/mstrike map addbomb <マップ名> <サイト名> §f- 爆弾設置ポイントを追加")
@@ -316,5 +318,20 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
         }
         
         sender.sendMessage("${Man10Strike.PREFIX} §eマップ作成機能は実装中です")
+    }
+    
+    private fun setLobbyCommand(sender: CommandSender) {
+        if (!sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.admin")) {
+            sender.sendMessage("${Man10Strike.PREFIX} §c権限がありません")
+            return
+        }
+        
+        if (sender !is Player) {
+            sender.sendMessage("${Man10Strike.PREFIX} §cこのコマンドはプレイヤーのみ実行できます")
+            return
+        }
+        
+        plugin.configManager.setMainLobbyLocation(sender.location)
+        sender.sendMessage("${Man10Strike.PREFIX} §aメインロビーの位置を設定しました")
     }
 }
