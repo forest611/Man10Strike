@@ -54,16 +54,7 @@ class Game(private val plugin: Man10Strike) {
         // カウントダウン中の場合は待機場所にテレポート
         if (state == State.STARTING && map != null) {
             val lobbySpawn = map!!.lobbySpawn
-            
-            // プレイヤーの状態をリセット
-            resetPlayerState(player)
-            
-            // インベントリをクリア
-            clearPlayerInventory(player)
-            
-            // テレポート
-            player.teleport(lobbySpawn)
-            player.sendMessage("${Man10Strike.PREFIX} §a待機場所にテレポートしました")
+            prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
         }
         
         // 最小人数に達したらカウントダウン開始
@@ -127,15 +118,7 @@ class Game(private val plugin: Man10Strike) {
         val lobbySpawn = map?.lobbySpawn
         if (lobbySpawn != null) {
             players.values.forEach { player ->
-                // プレイヤーの状態をリセット
-                resetPlayerState(player)
-                
-                // インベントリをクリア
-                clearPlayerInventory(player)
-                
-                // テレポート
-                player.teleport(lobbySpawn)
-                player.sendMessage("${Man10Strike.PREFIX} §a待機場所にテレポートしました")
+                prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
             }
         }
         
@@ -219,14 +202,7 @@ class Game(private val plugin: Man10Strike) {
         val mainLobby = plugin.configManager.mainLobbyLocation
         if (mainLobby != null) {
             players.values.forEach { player ->
-                // プレイヤーの状態をリセット
-                resetPlayerState(player)
-                
-                // インベントリをクリア
-                clearPlayerInventory(player)
-                
-                player.teleport(mainLobby)
-                player.sendMessage("${Man10Strike.PREFIX} §aメインロビーに戻りました")
+                prepareAndTeleport(player, mainLobby, "§aメインロビーに戻りました")
             }
         }
         
@@ -271,5 +247,20 @@ class Game(private val plugin: Man10Strike) {
     private fun clearPlayerInventory(player: Player) {
         player.inventory.clear()
         player.inventory.armorContents = arrayOfNulls(4)
+    }
+    
+    /**
+     * プレイヤーを準備してテレポート
+     */
+    private fun prepareAndTeleport(player: Player, location: org.bukkit.Location, message: String) {
+        // プレイヤーの状態をリセット
+        resetPlayerState(player)
+        
+        // インベントリをクリア
+        clearPlayerInventory(player)
+        
+        // テレポート
+        player.teleport(location)
+        player.sendMessage("${Man10Strike.PREFIX} $message")
     }
 }
