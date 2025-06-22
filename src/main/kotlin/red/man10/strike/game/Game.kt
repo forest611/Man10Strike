@@ -126,26 +126,24 @@ class Game(private val plugin: Man10Strike) {
         countdownSeconds = 30
         
         // カウントダウンタスクを開始
-        countdownTask = object : BukkitRunnable() {
-            override fun run() {
-                when (countdownSeconds) {
-                    30, 20, 10 -> broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
-                    5, 4, 3, 2, 1 -> {
-                        broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
-                        // タイトル表示
-                        players.values.forEach { player ->
-                            player.sendTitle("§c$countdownSeconds", "", 0, 20, 0)
-                        }
-                    }
-                    0 -> {
-                        cancel()
-                        start()
-                        return
+        countdownTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            when (countdownSeconds) {
+                30, 20, 10 -> broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
+                5, 4, 3, 2, 1 -> {
+                    broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
+                    // タイトル表示
+                    players.values.forEach { player ->
+                        player.sendTitle("§c$countdownSeconds", "", 0, 20, 0)
                     }
                 }
-                countdownSeconds--
+                0 -> {
+                    countdownTask?.cancel()
+                    start()
+                    return@Runnable
+                }
             }
-        }.runTaskTimer(plugin, 0L, 20L)
+            countdownSeconds--
+        }, 0L, 20L)
     }
     
     /**
