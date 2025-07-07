@@ -45,20 +45,20 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
      */
     fun addPlayer(player: Player): Boolean {
         if (isFull()) return false
-        if (state != GameState.WAITING && state != GameState.STARTING) return false
+        if (state != GameState.WAITING && state != GameState.COUNTDOWN) return false
         
         players[player.uniqueId] = player
         broadcast("§e${player.name} §aがゲームに参加しました §7(${players.size}/$maxPlayers)")
         
         // カウントダウン中の場合は待機場所にテレポート
-        if (state == GameState.STARTING) {
+        if (state == GameState.COUNTDOWN) {
             val lobbySpawn = map.lobbySpawn
             prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
         }
         
         // 最小人数に達したらカウントダウン開始
         if (players.size >= config.minPlayers && state == GameState.WAITING) {
-            state = GameState.STARTING
+            state = GameState.COUNTDOWN
             countdownSeconds = 30
             waitingSeconds = 0 // 待機時間をリセット
             broadcast("§a最小人数に達しました！30秒後にゲームを開始します")
@@ -83,7 +83,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         broadcast("§e${player.name} §cがゲームから退出しました §7(${players.size}/$maxPlayers)")
         
         // 最小人数を下回ったらカウントダウンをキャンセル
-        if (players.size < config.minPlayers && state == GameState.STARTING) {
+        if (players.size < config.minPlayers && state == GameState.COUNTDOWN) {
             state = GameState.WAITING
             countdownSeconds = 30
             broadcast("§c最小人数を下回ったため、カウントダウンをキャンセルしました")
@@ -138,7 +138,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 GameState.WAITING -> {
                     handleWaiting()
                 }
-                GameState.STARTING -> {
+                GameState.COUNTDOWN -> {
                     // カウントダウン中の処理
                     handleCountdown()
                 }
@@ -197,7 +197,25 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 buyingSeconds = 30 // 15秒の購入時間
                 broadcast("§a§l購入フェーズ開始！ §e${buyingSeconds}秒間武器を購入できます")
 
-                // TODO: 各チームのスポーン地点にテレポート
+                // 各チームのスポーン地点にテレポート
+                teamManager.getTerroristTeam().getMembers().forEach { uuid ->
+                    plugin.server.getPlayer(uuid)?.let { player ->
+                        val tSpawn = map.terroristSpawns.randomOrNull()
+                        if (tSpawn != null) {
+                            prepareAndTeleport(player, tSpawn, "§cテロリスト§aスポーンにテレポートしました")
+                        }
+                    }
+                }
+                
+                teamManager.getCounterTerroristTeam().getMembers().forEach { uuid ->
+                    plugin.server.getPlayer(uuid)?.let { player ->
+                        val ctSpawn = map.counterTerroristSpawns.randomOrNull()
+                        if (ctSpawn != null) {
+                            prepareAndTeleport(player, ctSpawn, "§9カウンターテロリスト§aスポーンにテレポートしました")
+                        }
+                    }
+                }
+
                 // TODO: 購入メニューを開く
             }
         }
