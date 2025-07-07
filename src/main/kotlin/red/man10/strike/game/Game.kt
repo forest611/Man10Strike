@@ -200,19 +200,13 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 // 各チームのスポーン地点にテレポート
                 teamManager.getTerroristTeam().getMembers().forEach { uuid ->
                     plugin.server.getPlayer(uuid)?.let { player ->
-                        val tSpawn = map.terroristSpawns.randomOrNull()
-                        if (tSpawn != null) {
-                            prepareAndTeleport(player, tSpawn, "§cテロリスト§aスポーンにテレポートしました")
-                        }
+                        prepareAndTeleport(player, map.terroristSpawn, "§cテロリスト§aスポーンにテレポートしました")
                     }
                 }
                 
                 teamManager.getCounterTerroristTeam().getMembers().forEach { uuid ->
                     plugin.server.getPlayer(uuid)?.let { player ->
-                        val ctSpawn = map.counterTerroristSpawns.randomOrNull()
-                        if (ctSpawn != null) {
-                            prepareAndTeleport(player, ctSpawn, "§9カウンターテロリスト§aスポーンにテレポートしました")
-                        }
+                        prepareAndTeleport(player, map.counterTerroristSpawn, "§9カウンターテロリスト§aスポーンにテレポートしました")
                     }
                 }
 
