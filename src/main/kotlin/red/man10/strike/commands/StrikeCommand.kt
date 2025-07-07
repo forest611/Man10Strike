@@ -21,10 +21,7 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
             "reload" -> reloadCommand(sender)
             "join" -> joinCommand(sender)
             "leave" -> leaveCommand(sender)
-            "start" -> startCommand(sender)
-            "stop" -> stopCommand(sender)
             "info" -> infoCommand(sender)
-            "setlobby" -> setLobbyCommand(sender)
             else -> {
                 sender.sendMessage("${Man10Strike.PREFIX} §c不明なコマンドです。/mstrike help でヘルプを確認してください。")
             }
@@ -38,7 +35,7 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
             val commands = mutableListOf("help", "join", "leave", "info")
             
             if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.admin")) {
-                commands.addAll(listOf("reload", "start", "stop", "setlobby"))
+                commands.addAll(listOf("reload", "setlobby"))
             }
             
             return commands.filter { it.startsWith(args[0].lowercase()) }
@@ -58,8 +55,6 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
         if (sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.admin")) {
             sender.sendMessage("§c===== Admin Commands =====")
             sender.sendMessage("§c/mstrike reload §f- 設定をリロード")
-            sender.sendMessage("§c/mstrike start §f- ゲームを強制開始")
-            sender.sendMessage("§c/mstrike stop §f- ゲームを強制終了")
             sender.sendMessage("§c/mstrike setlobby §f- メインロビーの位置を設定")
         }
         sender.sendMessage("§6§l====================================")
@@ -98,47 +93,13 @@ class StrikeCommand(private val plugin: Man10Strike) : CommandExecutor, TabCompl
         plugin.gameManager.leaveGame(sender)
     }
     
-    private fun startCommand(sender: CommandSender) {
-        if (!sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.start")) {
-            sender.sendMessage("${Man10Strike.PREFIX} §c権限がありません")
-            return
-        }
-        
-        // TODO: ゲーム強制開始の実装
-        sender.sendMessage("${Man10Strike.PREFIX} §eこの機能は実装中です")
-    }
-    
-    private fun stopCommand(sender: CommandSender) {
-        if (!sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.stop")) {
-            sender.sendMessage("${Man10Strike.PREFIX} §c権限がありません")
-            return
-        }
-        
-        // TODO: ゲーム強制終了の実装
-        sender.sendMessage("${Man10Strike.PREFIX} §eこの機能は実装中です")
-    }
     
     private fun infoCommand(sender: CommandSender) {
         sender.sendMessage("§6§l========== Man10Strike Info ==========")
         sender.sendMessage("§eアクティブなゲーム数: §f${plugin.gameManager.getActiveGameCount()}")
-        sender.sendMessage("§e参加中のプレイヤー数: §f${plugin.gameManager.getTotalPlayerCount()}")
         sender.sendMessage("§eVault連携: §f${if (plugin.vaultManager.isEnabled) "§a有効" else "§c無効"}")
         sender.sendMessage("§e利用可能なマップ数: §f${plugin.mapManager.getEnabledMaps().size}")
         sender.sendMessage("§6§l====================================")
     }
-    
-    private fun setLobbyCommand(sender: CommandSender) {
-        if (!sender.hasPermission("${Man10Strike.PERMISSION_PREFIX}.admin")) {
-            sender.sendMessage("${Man10Strike.PREFIX} §c権限がありません")
-            return
-        }
-        
-        if (sender !is Player) {
-            sender.sendMessage("${Man10Strike.PREFIX} §cこのコマンドはプレイヤーのみ実行できます")
-            return
-        }
-        
-        plugin.configManager.setMainLobbyLocation(sender.location)
-        sender.sendMessage("${Man10Strike.PREFIX} §aメインロビーの位置を設定しました")
-    }
+
 }
