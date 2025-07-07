@@ -3,7 +3,7 @@ package red.man10.strike
 import org.bukkit.plugin.java.JavaPlugin
 import red.man10.strike.commands.StrikeCommand
 import red.man10.strike.commands.StrikeMapCommand
-import red.man10.strike.config.ConfigManager
+import red.man10.strike.game.config.ConfigManager
 import red.man10.strike.game.GameManager
 import red.man10.strike.listeners.PlayerListener
 import red.man10.strike.map.MapManager
@@ -68,7 +68,6 @@ class Man10Strike : JavaPlugin() {
     private fun initializeManagers() {
         // 設定マネージャー
         configManager = ConfigManager(this)
-        configManager.reload()
         
         // マップマネージャー
         mapManager = MapManager(this)

@@ -1,11 +1,10 @@
-package red.man10.strike.config
-
-import org.bukkit.Location
+package red.man10.strike.game.config
 
 /**
  * ゲーム設定を保持するデータクラス
  */
 data class Config(
+
     // ゲーム設定
     val minPlayers: Int = 2,
     val maxPlayersPerTeam: Int = 5,
@@ -25,18 +24,5 @@ data class Config(
     val plantReward: Int = 300,
     val defuseReward: Int = 300,
     val maxMoney: Int = 16000,
-    
-    // データベース設定
-    val databaseEnabled: Boolean = false,
-    val databaseHost: String = "localhost",
-    val databasePort: Int = 3306,
-    val databaseName: String = "man10strike",
-    val databaseUsername: String = "root",
-    val databasePassword: String = "",
-    
-    // その他の設定
-    val debug: Boolean = false,
-    
-    // ロビー設定
-    val mainLobbyLocation: Location? = null
+
 )

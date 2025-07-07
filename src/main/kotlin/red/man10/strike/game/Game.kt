@@ -4,12 +4,12 @@ import org.bukkit.GameMode
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
 import red.man10.strike.Man10Strike
-import red.man10.strike.config.Config
+import red.man10.strike.game.config.Config
 import red.man10.strike.map.GameMap
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class Game(private val plugin: Man10Strike, val configFileName: String) {
+class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: String) {
     
     val gameId: UUID = UUID.randomUUID()
 
@@ -21,11 +21,7 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
     // プレイヤー管理
     private val players = ConcurrentHashMap<UUID, Player>()
     private val maxPlayers = config.maxPlayersPerTeam * 2
-    
-    // マップ設定
-    var map: GameMap? = null
-        private set
-    
+
     // 現在のラウンド
     private var currentRound = 0
 
@@ -44,8 +40,8 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
         broadcast("§e${player.name} §aがゲームに参加しました §7(${players.size}/$maxPlayers)")
         
         // カウントダウン中の場合は待機場所にテレポート
-        if (state == GameState.STARTING && map != null) {
-            val lobbySpawn = map!!.lobbySpawn
+        if (state == GameState.STARTING) {
+            val lobbySpawn = map.lobbySpawn
             prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
         }
         
@@ -110,24 +106,11 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
      */
     private fun startCountdown() {
         state = GameState.STARTING
-        
-        // マップが設定されていない場合は選択
-        if (map == null) {
-            val selectedMap = plugin.gameManager.selectMapForGame(this)
-            if (selectedMap == null) {
-                broadcast("§c利用可能なマップがありません")
-                state = GameState.WAITING
-                return
-            }
-            setMap(selectedMap)
-        }
-        
+
         // プレイヤーを待機場所にテレポート
-        val lobbySpawn = map?.lobbySpawn
-        if (lobbySpawn != null) {
-            players.values.forEach { player ->
-                prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
-            }
+        val lobbySpawn = map.lobbySpawn
+        players.values.forEach { player ->
+            prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
         }
         
         broadcast("§a最小人数に達しました！30秒後にゲームを開始します")
@@ -168,27 +151,15 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
     }
     
     /**
-     * マップを設定
-     */
-    fun setMap(gameMap: GameMap) {
-        this.map = gameMap
-        broadcast("§aマップ: §e${gameMap.displayName}")
-    }
-    
-    /**
      * ゲームを開始
      */
     private fun start() {
         if (state != GameState.STARTING) return
-        if (map == null) {
-            broadcast("§cマップが設定されていないため、ゲームを開始できません")
-            return
-        }
-        
+
         state = GameState.IN_PROGRESS
         currentRound = 1
         broadcast("§6§l=== ゲーム開始！ ===")
-        broadcast("§eマップ: §f${map!!.displayName}")
+        broadcast("§eマップ: §f${map.displayName}")
         
         // TODO: チーム分け、初期装備、テレポートなどの実装
     }
@@ -205,11 +176,8 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
         countdownTask = null
         
         // プレイヤーをメインロビーに送る
-        val mainLobby = config.mainLobbyLocation
-        if (mainLobby != null) {
-            players.values.forEach { player ->
-                prepareAndTeleport(player, mainLobby, "§aメインロビーに戻りました")
-            }
+        players.values.forEach { player ->
+            prepareAndTeleport(player, map.lobbySpawn, "§aメインロビーに戻りました")
         }
         
         // プレイヤーをクリア
