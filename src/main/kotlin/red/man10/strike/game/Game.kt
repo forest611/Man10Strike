@@ -2,6 +2,8 @@ package red.man10.strike.game
 
 import org.bukkit.GameMode
 import org.bukkit.entity.Player
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitTask
 import red.man10.strike.Man10Strike
 import red.man10.strike.game.config.Config
@@ -200,13 +202,17 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 // 各チームのスポーン地点にテレポート
                 teamManager.getTerroristTeam().getMembers().forEach { uuid ->
                     plugin.server.getPlayer(uuid)?.let { player ->
-                        prepareAndTeleport(player, map.terroristSpawn, "§cテロリスト§aスポーンにテレポートしました")
+                        prepareAndTeleport(player, map.terroristSpawn, "${config.terroristTeamName}§aスポーンにテレポートしました")
+                        // 購入フェーズ中は動けないようにする
+                        freezePlayer(player)
                     }
                 }
                 
                 teamManager.getCounterTerroristTeam().getMembers().forEach { uuid ->
                     plugin.server.getPlayer(uuid)?.let { player ->
-                        prepareAndTeleport(player, map.counterTerroristSpawn, "§9カウンターテロリスト§aスポーンにテレポートしました")
+                        prepareAndTeleport(player, map.counterTerroristSpawn, "${config.counterTerroristTeamName}§aスポーンにテレポートしました")
+                        // 購入フェーズ中は動けないようにする
+                        freezePlayer(player)
                     }
                 }
 
@@ -234,8 +240,12 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 state = GameState.IN_PROGRESS
                 broadcast("§c§l購入フェーズ終了！ ラウンド開始！")
                 
+                // 移動制限を解除
+                players.values.forEach { player ->
+                    unfreezePlayer(player)
+                }
+                
                 // TODO: 購入メニューを閉じる
-                // TODO: 移動制限を解除
                 return
             }
         }
@@ -314,5 +324,31 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         // テレポート
         player.teleport(location)
         player.sendMessage("${Man10Strike.PREFIX} $message")
+    }
+    
+    /**
+     * プレイヤーの移動を制限する
+     */
+    private fun freezePlayer(player: Player) {
+        // 移動速度を0にして動けなくする
+        player.walkSpeed = 0f
+        player.flySpeed = 0f
+        
+        // ジャンプも防ぐために鈍足効果を付与（レベル6以上でジャンプ不可）
+        player.addPotionEffect(PotionEffect(PotionEffectType.SLOW, Integer.MAX_VALUE, 6, false, false))
+        player.addPotionEffect(PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 200, false, false))
+    }
+    
+    /**
+     * プレイヤーの移動制限を解除する
+     */
+    private fun unfreezePlayer(player: Player) {
+        // 移動速度を元に戻す
+        player.walkSpeed = 0.2f // デフォルト値
+        player.flySpeed = 0.1f // デフォルト値
+        
+        // 鈍足効果を解除
+        player.removePotionEffect(PotionEffectType.SLOW)
+        player.removePotionEffect(PotionEffectType.JUMP)
     }
 }
