@@ -17,28 +17,28 @@ class ConfigManager(private val plugin: Man10Strike) {
     fun reload() {
         plugin.reloadConfig()
         fileConfig = plugin.config
-        config = loadSettings(fileConfig)
+        config = getConfig(fileConfig)
     }
     
     /**
      * 指定されたファイル名から設定を読み込んでConfigを返す
      */
-    fun loadSettings(fileName: String): Config {
+    fun getConfig(fileName: String): Config {
         val configFile = File(plugin.dataFolder, "$fileName.yml")
         if (!configFile.exists()) {
             // ファイルが存在しない場合はデフォルト設定を使用
             plugin.logger.warning("設定ファイル ${configFile.name} が見つかりません。デフォルト設定を使用します。")
-            return loadSettings(plugin.config)
+            return getConfig(plugin.config)
         }
         
         val yamlConfig = YamlConfiguration.loadConfiguration(configFile)
-        return loadSettings(yamlConfig)
+        return getConfig(yamlConfig)
     }
     
     /**
      * FileConfigurationから設定を読み込んでConfigを返す
      */
-    fun loadSettings(fileConfig: FileConfiguration): Config {
+    fun getConfig(fileConfig: FileConfiguration): Config {
         return Config(
             // ゲーム設定の読み込み
             minPlayers = fileConfig.getInt("game.min-players", 2),

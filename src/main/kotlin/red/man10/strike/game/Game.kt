@@ -4,6 +4,7 @@ import org.bukkit.GameMode
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
 import red.man10.strike.Man10Strike
+import red.man10.strike.config.Config
 import red.man10.strike.map.GameMap
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -14,9 +15,12 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
 
     private var state: GameState = GameState.WAITING
 
+    // ゲーム固有の設定
+    val config: Config = plugin.configManager.getConfig(configFileName)
+
     // プレイヤー管理
     private val players = ConcurrentHashMap<UUID, Player>()
-    private val maxPlayers = plugin.configManager.maxPlayersPerTeam * 2
+    private val maxPlayers = config.maxPlayersPerTeam * 2
     
     // マップ設定
     var map: GameMap? = null
@@ -46,7 +50,7 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
         }
         
         // 最小人数に達したらカウントダウン開始
-        if (players.size >= plugin.configManager.minPlayers && state == GameState.WAITING) {
+        if (players.size >= config.minPlayers && state == GameState.WAITING) {
             startCountdown()
         }
         
@@ -63,7 +67,7 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
         broadcast("§e${player.name} §cがゲームから退出しました §7(${players.size}/$maxPlayers)")
         
         // 最小人数を下回ったらカウントダウンをキャンセル
-        if (players.size < plugin.configManager.minPlayers && state == GameState.STARTING) {
+        if (players.size < config.minPlayers && state == GameState.STARTING) {
             cancelCountdown()
         }
         
@@ -201,7 +205,7 @@ class Game(private val plugin: Man10Strike, val configFileName: String) {
         countdownTask = null
         
         // プレイヤーをメインロビーに送る
-        val mainLobby = plugin.configManager.mainLobbyLocation
+        val mainLobby = config.mainLobbyLocation
         if (mainLobby != null) {
             players.values.forEach { player ->
                 prepareAndTeleport(player, mainLobby, "§aメインロビーに戻りました")
