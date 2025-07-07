@@ -12,9 +12,6 @@ class GameManager(private val plugin: Man10Strike) {
     // アクティブなゲーム
     private val activeGames = ConcurrentHashMap<UUID, Game>()
     
-    // プレイヤーとゲームのマッピング
-    private val playerGameMap = ConcurrentHashMap<UUID, UUID>()
-    
     init {
         plugin.logger.info("${Man10Strike.PREFIX} §aゲームマネージャーを初期化しました")
     }
@@ -38,7 +35,6 @@ class GameManager(private val plugin: Man10Strike) {
         }
         
         if (game.addPlayer(player)) {
-            playerGameMap[player.uniqueId] = game.gameId
             player.sendMessage("${Man10Strike.PREFIX} §aゲームに参加しました")
             return true
         }
@@ -59,7 +55,6 @@ class GameManager(private val plugin: Man10Strike) {
         }
 
         if (game.removePlayer(player)) {
-            playerGameMap.remove(player.uniqueId)
             player.sendMessage("${Man10Strike.PREFIX} §aゲームから退出しました")
             return true
         }
@@ -70,15 +65,14 @@ class GameManager(private val plugin: Man10Strike) {
      * プレイヤーがゲームに参加しているか確認
      */
     fun isInGame(player: Player): Boolean {
-        return playerGameMap.containsKey(player.uniqueId)
+        return activeGames.values.any { game -> game.isJoined(player) }
     }
     
     /**
      * プレイヤーが参加しているゲームを取得
      */
     fun getPlayerGame(player: Player): Game? {
-        val gameId = playerGameMap[player.uniqueId] ?: return null
-        return activeGames[gameId]
+        return activeGames.values.firstOrNull { game -> game.isJoined(player) }
     }
     
     /**
@@ -135,16 +129,12 @@ class GameManager(private val plugin: Man10Strike) {
             game.forceEnd()
         }
         activeGames.clear()
-        playerGameMap.clear()
     }
     
     /**
      * ゲーム終了時の処理
      */
     fun onGameEnd(game: Game) {
-        // プレイヤーマッピングのクリーンアップ
-        playerGameMap.entries.removeIf { it.value == game.gameId }
-        
         // ゲームを削除
         activeGames.remove(game.gameId)
     }
@@ -154,13 +144,6 @@ class GameManager(private val plugin: Man10Strike) {
      */
     fun getActiveGameCount(): Int {
         return activeGames.size
-    }
-    
-    /**
-     * 参加中のプレイヤー数を取得
-     */
-    fun getTotalPlayerCount(): Int {
-        return playerGameMap.size
     }
     
     /**

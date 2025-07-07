@@ -66,6 +66,12 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         if (players.size < config.minPlayers && state == GameState.STARTING) {
             cancelCountdown()
         }
+
+        // 0人になったらゲームを終了
+        if (players.isEmpty()) {
+            forceEnd()
+            return true
+        }
         
         return true
     }
@@ -100,6 +106,10 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
      * ゲーム内のプレイヤーリストを取得
      */
     fun getPlayers(): List<Player> = players.values.toList()
+
+    fun isJoined(player: Player): Boolean {
+        return players.containsKey(player.uniqueId)
+    }
     
     /**
      * ゲーム開始のカウントダウンを開始
