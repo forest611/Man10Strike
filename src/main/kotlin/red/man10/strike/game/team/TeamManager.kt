@@ -105,5 +105,38 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
      * カウンターテロリストチームを取得
      */
     fun getCounterTerroristTeam(): Team = counterTerroristTeam
+    
+    /**
+     * 両チームのメンバーを入れ替える
+     */
+    fun swapTeams() {
+        // 現在のメンバーを一時保存
+        val terroristMembers = terroristTeam.getMembers().toSet()
+        val counterTerroristMembers = counterTerroristTeam.getMembers().toSet()
+        
+        // チームをクリア
+        clearAllTeams()
+        
+        // メンバーを入れ替えて追加
+        terroristMembers.forEach { uuid ->
+            counterTerroristTeam.addMember(uuid)
+        }
+        
+        counterTerroristMembers.forEach { uuid ->
+            terroristTeam.addMember(uuid)
+        }
+        
+        // プレイヤーに通知
+        plugin.server.onlinePlayers.forEach { player ->
+            when {
+                terroristTeam.isMember(player.uniqueId) -> {
+                    player.sendMessage("${Man10Strike.PREFIX} §aチームが入れ替わりました！ あなたは${terroristTeam.color}${terroristTeam.displayName}§aです")
+                }
+                counterTerroristTeam.isMember(player.uniqueId) -> {
+                    player.sendMessage("${Man10Strike.PREFIX} §aチームが入れ替わりました！ あなたは${counterTerroristTeam.color}${counterTerroristTeam.displayName}§aです")
+                }
+            }
+        }
+    }
 
 }
