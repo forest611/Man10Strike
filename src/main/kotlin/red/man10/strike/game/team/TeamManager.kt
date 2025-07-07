@@ -13,12 +13,12 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     
     // チームの定義（T側とCT側）
     private val terroristTeam = Team(
-        "terrorist", 
+        TeamType.TERRORIST,
         game.config.terroristTeamColor + game.config.terroristTeamName, 
         game.config.terroristTeamColor
     )
     private val counterTerroristTeam = Team(
-        "counter_terrorist", 
+        TeamType.COUNTER_TERRORIST,
         game.config.counterTerroristTeamColor + game.config.counterTerroristTeamName, 
         game.config.counterTerroristTeamColor
     )

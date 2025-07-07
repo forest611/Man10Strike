@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
  * ゲーム内のチームを表すクラス
  */
 class Team(
-    val name: String,
+    val type: TeamType,
     val displayName: String,
     val color: String // チームカラー（§c, §9など）
 ) {
