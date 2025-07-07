@@ -26,29 +26,21 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     /**
      * プレイヤーを指定したチームに追加
      */
-    fun addPlayerToTeam(player: Player, teamName: String): Boolean {
+    fun addPlayerToTeam(player: Player, teamType: TeamType): Boolean {
         val playerUUID = player.uniqueId
         
         // すでにチームに所属している場合は、現在のチームから削除
         removePlayerFromAllTeams(playerUUID)
         
         // 指定されたチームに追加
-        return when (teamName.lowercase()) {
-            "terrorist", "t" -> {
-                terroristTeam.addMember(playerUUID)
-                player.sendMessage("${Man10Strike.PREFIX} ${terroristTeam.color}${terroristTeam.displayName}§aチームに参加しました")
-                true
-            }
-            "counter_terrorist", "ct" -> {
-                counterTerroristTeam.addMember(playerUUID)
-                player.sendMessage("${Man10Strike.PREFIX} ${counterTerroristTeam.color}${counterTerroristTeam.displayName}§aチームに参加しました")
-                true
-            }
-            else -> {
-                player.sendMessage("${Man10Strike.PREFIX} §c無効なチーム名です")
-                false
-            }
+        val team = when (teamType) {
+            TeamType.TERRORIST -> terroristTeam
+            TeamType.COUNTER_TERRORIST -> counterTerroristTeam
         }
+        
+        team.addMember(playerUUID)
+        player.sendMessage("${Man10Strike.PREFIX} ${team.color}${team.displayName}§aチームに参加しました")
+        return true
     }
     
     /**
@@ -145,12 +137,12 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     /**
      * チームが満員かどうかを確認
      */
-    fun isTeamFull(teamName: String): Boolean {
+    fun isTeamFull(teamType: TeamType): Boolean {
         val maxPlayersPerTeam = game.config.maxPlayersPerTeam
-        return when (teamName.lowercase()) {
-            "terrorist", "t" -> terroristTeam.size() >= maxPlayersPerTeam
-            "counter_terrorist", "ct" -> counterTerroristTeam.size() >= maxPlayersPerTeam
-            else -> false
+        val team = when (teamType) {
+            TeamType.TERRORIST -> terroristTeam
+            TeamType.COUNTER_TERRORIST -> counterTerroristTeam
         }
+        return team.size() >= maxPlayersPerTeam
     }
 }
