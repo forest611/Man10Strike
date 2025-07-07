@@ -2,7 +2,9 @@ package red.man10.strike.config
 
 import org.bukkit.Location
 import org.bukkit.configuration.file.FileConfiguration
+import org.bukkit.configuration.file.YamlConfiguration
 import red.man10.strike.Man10Strike
+import java.io.File
 
 class ConfigManager(private val plugin: Man10Strike) {
     
@@ -15,11 +17,29 @@ class ConfigManager(private val plugin: Man10Strike) {
     fun reload() {
         plugin.reloadConfig()
         fileConfig = plugin.config
-        loadSettings()
+        config = loadSettings(fileConfig)
     }
     
-    private fun loadSettings() {
-        config = Config(
+    /**
+     * 指定されたファイル名から設定を読み込んでConfigを返す
+     */
+    fun loadSettings(fileName: String): Config {
+        val configFile = File(plugin.dataFolder, "$fileName.yml")
+        if (!configFile.exists()) {
+            // ファイルが存在しない場合はデフォルト設定を使用
+            plugin.logger.warning("設定ファイル ${configFile.name} が見つかりません。デフォルト設定を使用します。")
+            return loadSettings(plugin.config)
+        }
+        
+        val yamlConfig = YamlConfiguration.loadConfiguration(configFile)
+        return loadSettings(yamlConfig)
+    }
+    
+    /**
+     * FileConfigurationから設定を読み込んでConfigを返す
+     */
+    fun loadSettings(fileConfig: FileConfiguration): Config {
+        return Config(
             // ゲーム設定の読み込み
             minPlayers = fileConfig.getInt("game.min-players", 2),
             maxPlayersPerTeam = fileConfig.getInt("game.max-players-per-team", 5),
