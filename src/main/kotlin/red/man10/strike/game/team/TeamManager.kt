@@ -81,6 +81,20 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     }
     
     /**
+     * プレイヤーがいずれかのチームに参加しているかを確認
+     */
+    fun isInTeam(player: Player): Boolean {
+        return getPlayerTeam(player.uniqueId) != null
+    }
+    
+    /**
+     * プレイヤーがいずれかのチームに参加しているかを確認（UUID版）
+     */
+    fun isInTeam(playerUUID: UUID): Boolean {
+        return getPlayerTeam(playerUUID) != null
+    }
+    
+    /**
      * プレイヤーをすべてのチームから削除
      */
     fun removePlayerFromAllTeams(playerUUID: UUID) {
