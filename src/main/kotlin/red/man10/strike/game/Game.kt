@@ -136,14 +136,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         gameTickTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
             when (state) {
                 GameState.WAITING -> {
-                    // 待機中の処理
-                    waitingSeconds++
-                    
-                    // 180秒（3分）経過したら強制終了
-                    if (waitingSeconds >= 180) {
-                        broadcast("§c待機時間が3分を超えたため、ゲームを終了します")
-                        forceEnd()
-                    }
+                    handleWaiting()
                 }
                 GameState.STARTING -> {
                     // カウントダウン中の処理
@@ -164,6 +157,17 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
             }
         }, 0L, 20L) // 20tick = 1秒
     }
+
+    private fun handleWaiting() {
+        // 待機中の処理
+        waitingSeconds++
+
+        // 180秒（3分）経過したら強制終了
+        if (waitingSeconds >= 180) {
+            broadcast("§c待機時間が3分を超えたため、ゲームを終了します")
+            forceEnd()
+        }
+    }
     
     /**
      * カウントダウン処理
@@ -179,8 +183,22 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 }
             }
             0 -> {
-                start()
-                return
+                currentRound = 1
+                broadcast("§6§l=== ゲーム開始！ ===")
+                broadcast("§eマップ: §f${map.displayName}")
+
+                // 未参加のプレイヤーをランダムなチームに追加
+                for (member in players.values.filter { !teamManager.isInTeam(it) }){
+                    teamManager.addPlayerToRandomTeam(member)
+                }
+
+                // 購入フェーズに移行
+                state = GameState.BUYING
+                buyingSeconds = 30 // 15秒の購入時間
+                broadcast("§a§l購入フェーズ開始！ §e${buyingSeconds}秒間武器を購入できます")
+
+                // TODO: 各チームのスポーン地点にテレポート
+                // TODO: 購入メニューを開く
             }
         }
         countdownSeconds--
@@ -210,30 +228,6 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
             }
         }
         buyingSeconds--
-    }
-    
-    /**
-     * ゲームを開始
-     */
-    private fun start() {
-        if (state != GameState.STARTING) return
-
-        currentRound = 1
-        broadcast("§6§l=== ゲーム開始！ ===")
-        broadcast("§eマップ: §f${map.displayName}")
-
-        // 未参加のプレイヤーをランダムなチームに追加
-        for (member in players.values.filter { !teamManager.isInTeam(it) }){
-            teamManager.addPlayerToRandomTeam(member)
-        }
-        
-        // 購入フェーズに移行
-        state = GameState.BUYING
-        buyingSeconds = 15 // 15秒の購入時間
-        broadcast("§a§l購入フェーズ開始！ §e15秒間武器を購入できます")
-        
-        // TODO: 各チームのスポーン地点にテレポート
-        // TODO: 購入メニューを開く
     }
     
     /**
