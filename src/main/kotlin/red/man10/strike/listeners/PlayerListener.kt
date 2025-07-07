@@ -12,10 +12,8 @@ class PlayerListener(private val plugin: Man10Strike) : Listener {
     fun onPlayerJoin(event: PlayerJoinEvent) {
         val player = event.player
         
-        // デバッグモードの場合、参加メッセージを表示
-        if (plugin.configManager.debug) {
-            plugin.logger.info("${player.name} がサーバーに参加しました")
-        }
+        // 参加メッセージを表示
+        plugin.logger.info("${player.name} がサーバーに参加しました")
     }
     
     @EventHandler
@@ -27,9 +25,7 @@ class PlayerListener(private val plugin: Man10Strike) : Listener {
             plugin.gameManager.leaveGame(player)
         }
         
-        // デバッグモードの場合、退出メッセージを表示
-        if (plugin.configManager.debug) {
-            plugin.logger.info("${player.name} がサーバーから退出しました")
-        }
+        // 退出メッセージを表示
+        plugin.logger.info("${player.name} がサーバーから退出しました")
     }
 }

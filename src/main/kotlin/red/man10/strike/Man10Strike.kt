@@ -105,7 +105,6 @@ class Man10Strike : JavaPlugin() {
     
     fun reload() {
         reloadConfig()
-        configManager.reload()
         mapManager.reload()
         logger.info("$PREFIX §a設定をリロードしました")
     }

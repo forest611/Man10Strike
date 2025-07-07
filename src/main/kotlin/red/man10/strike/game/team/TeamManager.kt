@@ -12,8 +12,16 @@ import kotlin.random.Random
 class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     
     // チームの定義（T側とCT側）
-    private val terroristTeam = Team("terrorist", "§cテロリスト", "§c")
-    private val counterTerroristTeam = Team("counter_terrorist", "§9カウンターテロリスト", "§9")
+    private val terroristTeam = Team(
+        "terrorist", 
+        game.config.terroristTeamColor + game.config.terroristTeamName, 
+        game.config.terroristTeamColor
+    )
+    private val counterTerroristTeam = Team(
+        "counter_terrorist", 
+        game.config.counterTerroristTeamColor + game.config.counterTerroristTeamName, 
+        game.config.counterTerroristTeamColor
+    )
     
     /**
      * プレイヤーを指定したチームに追加
@@ -138,7 +146,7 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
      * チームが満員かどうかを確認
      */
     fun isTeamFull(teamName: String): Boolean {
-        val maxPlayersPerTeam = plugin.configManager.maxPlayersPerTeam
+        val maxPlayersPerTeam = game.config.maxPlayersPerTeam
         return when (teamName.lowercase()) {
             "terrorist", "t" -> terroristTeam.size() >= maxPlayersPerTeam
             "counter_terrorist", "ct" -> counterTerroristTeam.size() >= maxPlayersPerTeam

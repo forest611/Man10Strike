@@ -38,6 +38,12 @@ class ConfigManager(private val plugin: Man10Strike) {
             plantReward = fileConfig.getInt("economy.plant-reward", 300),
             defuseReward = fileConfig.getInt("economy.defuse-reward", 300),
             maxMoney = fileConfig.getInt("economy.max-money", 16000),
+            
+            // チーム設定の読み込み
+            terroristTeamName = fileConfig.getString("teams.terrorist.name", "テロリスト") ?: "テロリスト",
+            terroristTeamColor = fileConfig.getString("teams.terrorist.color", "§c") ?: "§c",
+            counterTerroristTeamName = fileConfig.getString("teams.counter-terrorist.name", "カウンターテロリスト") ?: "カウンターテロリスト",
+            counterTerroristTeamColor = fileConfig.getString("teams.counter-terrorist.color", "§9") ?: "§9"
             )
     }
 }

@@ -24,5 +24,11 @@ data class Config(
     val plantReward: Int = 300,
     val defuseReward: Int = 300,
     val maxMoney: Int = 16000,
+    
+    // チーム設定
+    val terroristTeamName: String = "テロリスト",
+    val terroristTeamColor: String = "§c",
+    val counterTerroristTeamName: String = "カウンターテロリスト",
+    val counterTerroristTeamColor: String = "§9"
 
 )
