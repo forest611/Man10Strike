@@ -8,6 +8,7 @@ import org.bukkit.scheduler.BukkitTask
 import red.man10.strike.Man10Strike
 import red.man10.strike.game.config.Config
 import red.man10.strike.game.team.TeamManager
+import red.man10.strike.game.team.TeamType
 import red.man10.strike.map.GameMap
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
