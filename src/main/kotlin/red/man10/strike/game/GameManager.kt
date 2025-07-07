@@ -120,12 +120,15 @@ class GameManager(private val plugin: Man10Strike) {
             return null
         }
         
-        val game = Game(plugin)
+        // ゲームごとに一意のconfig名を生成（マップIDを使用）
+        val configFileName = "game_${availableMap.id}"
+        
+        val game = Game(plugin, configFileName)
         game.setMap(availableMap)
         activeGames[game.gameId] = game
         usedMaps[availableMap.id] = game.gameId
         
-        plugin.logger.info("${Man10Strike.PREFIX} §a新しいゲームを作成しました: ${game.gameId} (マップ: ${availableMap.displayName})")
+        plugin.logger.info("${Man10Strike.PREFIX} §a新しいゲームを作成しました: ${game.gameId} (マップ: ${availableMap.displayName}, Config: $configFileName)")
         return game
     }
     

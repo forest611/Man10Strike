@@ -8,7 +8,7 @@ import red.man10.strike.map.GameMap
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class Game(private val plugin: Man10Strike) {
+class Game(private val plugin: Man10Strike, val configFileName: String) {
     
     val gameId: UUID = UUID.randomUUID()
 
