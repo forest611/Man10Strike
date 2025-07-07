@@ -38,6 +38,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
     private var gameTickTask: BukkitTask? = null
     private var countdownSeconds = 30
     private var waitingSeconds = 0 // 待機状態の経過秒数
+    private var buyingSeconds = 0 // 購入フェーズの経過秒数
     
     /**
      * プレイヤーを追加
@@ -148,6 +149,10 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                     // カウントダウン中の処理
                     handleCountdown()
                 }
+                GameState.BUYING -> {
+                    // 購入フェーズの処理
+                    handleBuyingPhase()
+                }
                 GameState.IN_PROGRESS -> {
                     // ゲーム進行中の処理
                     // TODO: ラウンド時間の管理など
@@ -182,12 +187,37 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
     }
     
     /**
+     * 購入フェーズの処理
+     */
+    private fun handleBuyingPhase() {
+        when (buyingSeconds) {
+            15, 10 -> broadcast("§e購入フェーズ終了まで §c${buyingSeconds}秒")
+            5, 4, 3, 2, 1 -> {
+                broadcast("§e購入フェーズ終了まで §c${buyingSeconds}秒")
+                // タイトル表示
+                players.values.forEach { player ->
+                    player.sendTitle("§e${buyingSeconds}", "§7購入フェーズ終了まで", 0, 20, 0)
+                }
+            }
+            0 -> {
+                // ラウンド開始
+                state = GameState.IN_PROGRESS
+                broadcast("§c§l購入フェーズ終了！ ラウンド開始！")
+                
+                // TODO: 購入メニューを閉じる
+                // TODO: 移動制限を解除
+                return
+            }
+        }
+        buyingSeconds--
+    }
+    
+    /**
      * ゲームを開始
      */
     private fun start() {
         if (state != GameState.STARTING) return
 
-        state = GameState.IN_PROGRESS
         currentRound = 1
         broadcast("§6§l=== ゲーム開始！ ===")
         broadcast("§eマップ: §f${map.displayName}")
@@ -196,7 +226,14 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         for (member in players.values.filter { !teamManager.isInTeam(it) }){
             teamManager.addPlayerToRandomTeam(member)
         }
-
+        
+        // 購入フェーズに移行
+        state = GameState.BUYING
+        buyingSeconds = 15 // 15秒の購入時間
+        broadcast("§a§l購入フェーズ開始！ §e15秒間武器を購入できます")
+        
+        // TODO: 各チームのスポーン地点にテレポート
+        // TODO: 購入メニューを開く
     }
     
     /**
