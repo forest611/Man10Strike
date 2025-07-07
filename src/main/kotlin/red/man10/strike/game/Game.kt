@@ -5,6 +5,7 @@ import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
 import red.man10.strike.Man10Strike
 import red.man10.strike.game.config.Config
+import red.man10.strike.game.team.TeamManager
 import red.man10.strike.map.GameMap
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -12,11 +13,19 @@ import java.util.concurrent.ConcurrentHashMap
 class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: String) {
     
     val gameId: UUID = UUID.randomUUID()
+    
+    init {
+        // ゲームティックタスクを開始（1秒ごとに実行）
+        startGameTick()
+    }
 
     private var state: GameState = GameState.WAITING
 
     // ゲーム固有の設定
     val config: Config = plugin.configManager.getConfig(configFileName)
+
+    // チーム管理
+    private val teamManager = TeamManager(plugin, this)
 
     // プレイヤー管理
     private val players = ConcurrentHashMap<UUID, Player>()
@@ -25,8 +34,8 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
     // 現在のラウンド
     private var currentRound = 0
 
-    // カウントダウンタスク
-    private var countdownTask: BukkitTask? = null
+    // ゲームティックタスク（1秒ごとに実行）
+    private var gameTickTask: BukkitTask? = null
     private var countdownSeconds = 30
     
     /**
@@ -47,7 +56,15 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         
         // 最小人数に達したらカウントダウン開始
         if (players.size >= config.minPlayers && state == GameState.WAITING) {
-            startCountdown()
+            state = GameState.STARTING
+            countdownSeconds = 30
+            broadcast("§a最小人数に達しました！30秒後にゲームを開始します")
+            
+            // プレイヤーを待機場所にテレポート
+            val lobbySpawn = map.lobbySpawn
+            players.values.forEach { p ->
+                prepareAndTeleport(p, lobbySpawn, "§a待機場所にテレポートしました")
+            }
         }
         
         return true
@@ -64,7 +81,9 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         
         // 最小人数を下回ったらカウントダウンをキャンセル
         if (players.size < config.minPlayers && state == GameState.STARTING) {
-            cancelCountdown()
+            state = GameState.WAITING
+            countdownSeconds = 30
+            broadcast("§c最小人数を下回ったため、カウントダウンをキャンセルしました")
         }
 
         // 0人になったらゲームを終了
@@ -80,11 +99,6 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
      * ゲームが満員かどうか
      */
     fun isFull(): Boolean = players.size >= maxPlayers
-    
-    /**
-     * ゲームが空かどうか
-     */
-    fun isEmpty(): Boolean = players.isEmpty()
 
     /**
      * ゲームに参加できるかどうか
@@ -101,63 +115,62 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
 
         return true
     }
-    
+
+    fun isJoined(player: Player): Boolean {
+        return players.containsKey(player.uniqueId)
+    }
+
     /**
      * ゲーム内のプレイヤーリストを取得
      */
     fun getPlayers(): List<Player> = players.values.toList()
 
-    fun isJoined(player: Player): Boolean {
-        return players.containsKey(player.uniqueId)
-    }
-    
-    /**
-     * ゲーム開始のカウントダウンを開始
-     */
-    private fun startCountdown() {
-        state = GameState.STARTING
 
-        // プレイヤーを待機場所にテレポート
-        val lobbySpawn = map.lobbySpawn
-        players.values.forEach { player ->
-            prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
-        }
-        
-        broadcast("§a最小人数に達しました！30秒後にゲームを開始します")
-        countdownSeconds = 30
-        
-        // カウントダウンタスクを開始
-        countdownTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
-            when (countdownSeconds) {
-                30, 20, 10 -> broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
-                5, 4, 3, 2, 1 -> {
-                    broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
-                    // タイトル表示
-                    players.values.forEach { player ->
-                        player.sendTitle("§c$countdownSeconds", "", 0, 20, 0)
-                    }
+    /**
+     * ゲームティックタスクを開始（1秒ごとに実行）
+     */
+    private fun startGameTick() {
+        gameTickTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            when (state) {
+                GameState.WAITING -> {
+                    // 待機中の処理
+                    // 特に何もしない
                 }
-                0 -> {
-                    countdownTask?.cancel()
-                    start()
-                    return@Runnable
+                GameState.STARTING -> {
+                    // カウントダウン中の処理
+                    handleCountdown()
+                }
+                GameState.IN_PROGRESS -> {
+                    // ゲーム進行中の処理
+                    // TODO: ラウンド時間の管理など
+                }
+                GameState.ENDING -> {
+                    // 終了処理中
+                    // TODO: 終了アニメーションなど
                 }
             }
-            countdownSeconds--
-        }, 0L, 20L)
+        }, 0L, 20L) // 20tick = 1秒
     }
     
     /**
-     * カウントダウンをキャンセル
+     * カウントダウン処理
      */
-    private fun cancelCountdown() {
-        state = GameState.WAITING
-        broadcast("§c最小人数を下回ったため、カウントダウンをキャンセルしました")
-        
-        // カウントダウンタスクをキャンセル
-        countdownTask?.cancel()
-        countdownTask = null
-        countdownSeconds = 30
+    private fun handleCountdown() {
+        when (countdownSeconds) {
+            30, 20, 10 -> broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
+            5, 4, 3, 2, 1 -> {
+                broadcast("§eゲーム開始まで §c${countdownSeconds}秒")
+                // タイトル表示
+                players.values.forEach { player ->
+                    player.sendTitle("§c$countdownSeconds", "", 0, 20, 0)
+                }
+            }
+            0 -> {
+                start()
+                return
+            }
+        }
+        countdownSeconds--
     }
     
     /**
@@ -170,8 +183,12 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         currentRound = 1
         broadcast("§6§l=== ゲーム開始！ ===")
         broadcast("§eマップ: §f${map.displayName}")
-        
-        // TODO: チーム分け、初期装備、テレポートなどの実装
+
+        // 未参加のプレイヤーをランダムなチームに追加
+        for (member in players.values.filter { !teamManager.isInTeam(it) }){
+            teamManager.addPlayerToRandomTeam(member)
+        }
+
     }
     
     /**
@@ -181,9 +198,9 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         state = GameState.ENDING
         broadcast("§c§lゲームが強制終了されました")
         
-        // カウントダウンタスクをキャンセル
-        countdownTask?.cancel()
-        countdownTask = null
+        // ゲームティックタスクをキャンセル
+        gameTickTask?.cancel()
+        gameTickTask = null
         
         // プレイヤーをメインロビーに送る
         players.values.forEach { player ->
