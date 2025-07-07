@@ -29,6 +29,12 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     fun addPlayerToTeam(player: Player, teamType: TeamType): Boolean {
         val playerUUID = player.uniqueId
         
+        // チームが満員かチェック
+        if (isTeamFull(teamType)) {
+            player.sendMessage("${Man10Strike.PREFIX} §cそのチームは満員です")
+            return false
+        }
+        
         // すでにチームに所属している場合は、現在のチームから削除
         removePlayerFromAllTeams(playerUUID)
         
@@ -49,9 +55,6 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     fun addPlayerToRandomTeam(player: Player){
         val playerUUID = player.uniqueId
         
-        // すでにチームに所属している場合は、現在のチームから削除
-        removePlayerFromAllTeams(playerUUID)
-        
         // チームのバランスを考慮して追加
         val tSize = terroristTeam.size()
         val ctSize = counterTerroristTeam.size()
@@ -65,29 +68,7 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
         team.addMember(playerUUID)
         player.sendMessage("${Man10Strike.PREFIX} ${team.color}${team.displayName}§aチームに参加しました")
     }
-    
-    /**
-     * 複数のプレイヤーをランダムにチーム分け
-     */
-    fun assignPlayersRandomly(players: List<Player>) {
-        // プレイヤーをシャッフル
-        val shuffledPlayers = players.shuffled()
-        
-        // チームをクリア
-        clearAllTeams()
-        
-        // 交互にチームに割り当て
-        shuffledPlayers.forEachIndexed { index, player ->
-            if (index % 2 == 0) {
-                terroristTeam.addMember(player.uniqueId)
-                player.sendMessage("${Man10Strike.PREFIX} ${terroristTeam.color}${terroristTeam.displayName}§aチームに参加しました")
-            } else {
-                counterTerroristTeam.addMember(player.uniqueId)
-                player.sendMessage("${Man10Strike.PREFIX} ${counterTerroristTeam.color}${counterTerroristTeam.displayName}§aチームに参加しました")
-            }
-        }
-    }
-    
+
     /**
      * プレイヤーの所属チームを取得
      */
@@ -124,25 +105,4 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
      * カウンターテロリストチームを取得
      */
     fun getCounterTerroristTeam(): Team = counterTerroristTeam
-    
-    /**
-     * チームのバランス情報を取得
-     */
-    fun getTeamBalance(): String {
-        val tSize = terroristTeam.size()
-        val ctSize = counterTerroristTeam.size()
-        return "§cT: $tSize §7vs §9CT: $ctSize"
-    }
-    
-    /**
-     * チームが満員かどうかを確認
-     */
-    fun isTeamFull(teamType: TeamType): Boolean {
-        val maxPlayersPerTeam = game.config.maxPlayersPerTeam
-        val team = when (teamType) {
-            TeamType.TERRORIST -> terroristTeam
-            TeamType.COUNTER_TERRORIST -> counterTerroristTeam
-        }
-        return team.size() >= maxPlayersPerTeam
-    }
 }
