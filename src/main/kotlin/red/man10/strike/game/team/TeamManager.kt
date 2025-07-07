@@ -29,20 +29,20 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
     fun addPlayerToTeam(player: Player, teamType: TeamType): Boolean {
         val playerUUID = player.uniqueId
         
+        // 指定されたチームを取得
+        val team = when (teamType) {
+            TeamType.TERRORIST -> terroristTeam
+            TeamType.COUNTER_TERRORIST -> counterTerroristTeam
+        }
+        
         // チームが満員かチェック
-        if (isTeamFull(teamType)) {
+        if (team.size() >= game.config.maxPlayersPerTeam) {
             player.sendMessage("${Man10Strike.PREFIX} §cそのチームは満員です")
             return false
         }
         
         // すでにチームに所属している場合は、現在のチームから削除
         removePlayerFromAllTeams(playerUUID)
-        
-        // 指定されたチームに追加
-        val team = when (teamType) {
-            TeamType.TERRORIST -> terroristTeam
-            TeamType.COUNTER_TERRORIST -> counterTerroristTeam
-        }
         
         team.addMember(playerUUID)
         player.sendMessage("${Man10Strike.PREFIX} ${team.color}${team.displayName}§aチームに参加しました")
@@ -105,4 +105,5 @@ class TeamManager(private val plugin: Man10Strike, private val game: Game) {
      * カウンターテロリストチームを取得
      */
     fun getCounterTerroristTeam(): Team = counterTerroristTeam
+
 }
