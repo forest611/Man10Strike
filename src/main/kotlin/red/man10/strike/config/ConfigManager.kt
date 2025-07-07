@@ -6,136 +6,100 @@ import red.man10.strike.Man10Strike
 
 class ConfigManager(private val plugin: Man10Strike) {
     
-    private lateinit var config: FileConfiguration
+    private lateinit var fileConfig: FileConfiguration
     
-    // ゲーム設定
-    var minPlayers: Int = 2
-        private set
-    var maxPlayersPerTeam: Int = 5
-        private set
-    var maxConcurrentGames: Int = 3
-        private set
-    var roundsToWin: Int = 13
-        private set
-    var roundTime: Int = 120
-        private set
-    var bombPlantTime: Int = 3
-        private set
-    var bombDefuseTime: Int = 5
-        private set
-    var bombTimer: Int = 40
-        private set
-    var preparationTime: Int = 15
-        private set
-    
-    // 経済設定
-    var startMoney: Int = 800
-        private set
-    var winReward: Int = 3000
-        private set
-    var loseReward: Int = 1900
-        private set
-    var killReward: Int = 300
-        private set
-    var plantReward: Int = 300
-        private set
-    var defuseReward: Int = 300
-        private set
-    var maxMoney: Int = 16000
-        private set
-    
-    // データベース設定
-    var databaseEnabled: Boolean = false
-        private set
-    var databaseHost: String = "localhost"
-        private set
-    var databasePort: Int = 3306
-        private set
-    var databaseName: String = "man10strike"
-        private set
-    var databaseUsername: String = "root"
-        private set
-    var databasePassword: String = ""
-        private set
-    
-    // その他の設定
-    var debug: Boolean = false
-        private set
-    
-    // ロビー設定
-    var mainLobbyLocation: Location? = null
+    // 現在の設定
+    var config: Config = Config()
         private set
     
     fun reload() {
         plugin.reloadConfig()
-        config = plugin.config
+        fileConfig = plugin.config
         loadSettings()
     }
     
     private fun loadSettings() {
-        // ゲーム設定の読み込み
-        config.getConfigurationSection("game")?.let { game ->
-            minPlayers = game.getInt("min-players", 2)
-            maxPlayersPerTeam = game.getInt("max-players-per-team", 5)
-            maxConcurrentGames = game.getInt("max-concurrent-games", 3)
-            roundsToWin = game.getInt("rounds-to-win", 13)
-            roundTime = game.getInt("round-time", 120)
-            bombPlantTime = game.getInt("bomb-plant-time", 3)
-            bombDefuseTime = game.getInt("bomb-defuse-time", 5)
-            bombTimer = game.getInt("bomb-timer", 40)
-            preparationTime = game.getInt("preparation-time", 15)
-        }
-        
-        // 経済設定の読み込み
-        config.getConfigurationSection("economy")?.let { economy ->
-            startMoney = economy.getInt("start-money", 800)
-            winReward = economy.getInt("win-reward", 3000)
-            loseReward = economy.getInt("lose-reward", 1900)
-            killReward = economy.getInt("kill-reward", 300)
-            plantReward = economy.getInt("plant-reward", 300)
-            defuseReward = economy.getInt("defuse-reward", 300)
-            maxMoney = economy.getInt("max-money", 16000)
-        }
-        
-        // データベース設定の読み込み
-        config.getConfigurationSection("database")?.let { db ->
-            databaseEnabled = db.getBoolean("enabled", false)
-            databaseHost = db.getString("host", "localhost") ?: "localhost"
-            databasePort = db.getInt("port", 3306)
-            databaseName = db.getString("database", "man10strike") ?: "man10strike"
-            databaseUsername = db.getString("username", "root") ?: "root"
-            databasePassword = db.getString("password", "") ?: ""
-        }
-        
-        // その他の設定
-        config.getConfigurationSection("general")?.let { general ->
-            debug = general.getBoolean("debug", false)
-        }
-        
-        // ロビー設定の読み込み
-        config.getConfigurationSection("lobby")?.let { lobby ->
-            mainLobbyLocation = lobby.getLocation("main-spawn")
-        }
+        config = Config(
+            // ゲーム設定の読み込み
+            minPlayers = fileConfig.getInt("game.min-players", 2),
+            maxPlayersPerTeam = fileConfig.getInt("game.max-players-per-team", 5),
+            maxConcurrentGames = fileConfig.getInt("game.max-concurrent-games", 3),
+            roundsToWin = fileConfig.getInt("game.rounds-to-win", 13),
+            roundTime = fileConfig.getInt("game.round-time", 120),
+            bombPlantTime = fileConfig.getInt("game.bomb-plant-time", 3),
+            bombDefuseTime = fileConfig.getInt("game.bomb-defuse-time", 5),
+            bombTimer = fileConfig.getInt("game.bomb-timer", 40),
+            preparationTime = fileConfig.getInt("game.preparation-time", 15),
+            
+            // 経済設定の読み込み
+            startMoney = fileConfig.getInt("economy.start-money", 800),
+            winReward = fileConfig.getInt("economy.win-reward", 3000),
+            loseReward = fileConfig.getInt("economy.lose-reward", 1900),
+            killReward = fileConfig.getInt("economy.kill-reward", 300),
+            plantReward = fileConfig.getInt("economy.plant-reward", 300),
+            defuseReward = fileConfig.getInt("economy.defuse-reward", 300),
+            maxMoney = fileConfig.getInt("economy.max-money", 16000),
+            
+            // データベース設定の読み込み
+            databaseEnabled = fileConfig.getBoolean("database.enabled", false),
+            databaseHost = fileConfig.getString("database.host", "localhost") ?: "localhost",
+            databasePort = fileConfig.getInt("database.port", 3306),
+            databaseName = fileConfig.getString("database.database", "man10strike") ?: "man10strike",
+            databaseUsername = fileConfig.getString("database.username", "root") ?: "root",
+            databasePassword = fileConfig.getString("database.password", "") ?: "",
+            
+            // その他の設定
+            debug = fileConfig.getBoolean("general.debug", false),
+            
+            // ロビー設定の読み込み
+            mainLobbyLocation = fileConfig.getLocation("lobby.main-spawn")
+        )
     }
     
     /**
      * メインロビーの位置を設定
      */
     fun setMainLobbyLocation(location: Location) {
-        mainLobbyLocation = location
-        config.set("lobby.main-spawn", location)
+        config = config.copy(mainLobbyLocation = location)
+        fileConfig.set("lobby.main-spawn", location)
         plugin.saveConfig()
     }
     
     fun getTeamName(team: String): String {
-        return config.getString("teams.$team.name", team) ?: team
+        return fileConfig.getString("teams.$team.name", team) ?: team
     }
     
     fun getTeamColor(team: String): String {
-        return config.getString("teams.$team.color", "&f") ?: "&f"
+        return fileConfig.getString("teams.$team.color", "&f") ?: "&f"
     }
     
     fun getTeamPrefix(team: String): String {
-        return config.getString("teams.$team.prefix", "") ?: ""
+        return fileConfig.getString("teams.$team.prefix", "") ?: ""
     }
+    
+    // 以下のプロパティは後方互換性のために残す
+    val minPlayers: Int get() = config.minPlayers
+    val maxPlayersPerTeam: Int get() = config.maxPlayersPerTeam
+    val maxConcurrentGames: Int get() = config.maxConcurrentGames
+    val roundsToWin: Int get() = config.roundsToWin
+    val roundTime: Int get() = config.roundTime
+    val bombPlantTime: Int get() = config.bombPlantTime
+    val bombDefuseTime: Int get() = config.bombDefuseTime
+    val bombTimer: Int get() = config.bombTimer
+    val preparationTime: Int get() = config.preparationTime
+    val startMoney: Int get() = config.startMoney
+    val winReward: Int get() = config.winReward
+    val loseReward: Int get() = config.loseReward
+    val killReward: Int get() = config.killReward
+    val plantReward: Int get() = config.plantReward
+    val defuseReward: Int get() = config.defuseReward
+    val maxMoney: Int get() = config.maxMoney
+    val databaseEnabled: Boolean get() = config.databaseEnabled
+    val databaseHost: String get() = config.databaseHost
+    val databasePort: Int get() = config.databasePort
+    val databaseName: String get() = config.databaseName
+    val databaseUsername: String get() = config.databaseUsername
+    val databasePassword: String get() = config.databasePassword
+    val debug: Boolean get() = config.debug
+    val mainLobbyLocation: Location? get() = config.mainLobbyLocation
 }
