@@ -254,7 +254,67 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         }
         buyingSeconds--
     }
-    
+
+    /**
+     * ラウンド進行中の処理
+     */
+    private fun handleInProgress() {
+        // 残り時間の表示
+        when (roundSeconds) {
+            120, 90, 60 -> broadcast("§eラウンド終了まで §c${roundSeconds}秒")
+            30, 20, 10 -> {
+                broadcast("§eラウンド終了まで §c${roundSeconds}秒")
+                // アクションバーに残り時間を表示
+                val minutes = roundSeconds / 60
+                val seconds = roundSeconds % 60
+                val timeText = String.format("§e残り時間: §c%d:%02d", minutes, seconds)
+                players.values.forEach { player ->
+                    player.sendActionBar(timeText)
+                }
+            }
+            5, 4, 3, 2, 1 -> {
+                broadcast("§c§lラウンド終了まで ${roundSeconds}秒！")
+            }
+            0 -> {
+                // 時間切れでラウンド終了
+                endRound(null)
+                return
+            }
+        }
+
+        // 10秒以下の場合は毎秒アクションバーを更新
+        if (roundSeconds <= 10) {
+            val minutes = roundSeconds / 60
+            val seconds = roundSeconds % 60
+            val timeText = String.format("§e残り時間: §c%d:%02d", minutes, seconds)
+            players.values.forEach { player ->
+                player.sendActionBar(timeText)
+            }
+        }
+
+        roundSeconds--
+
+        // TODO: 生存チームチェック
+        // TODO: 爆弾設置/解除チェック
+    }
+
+    /**
+     * ラウンドを終了する
+     */
+    private fun endRound(winnerTeam: TeamType?) {
+        broadcast("§6§l=== ラウンド終了 ===")
+
+        when (winnerTeam) {
+            TeamType.TERRORIST -> broadcast("§c${config.terroristTeamName}§eの勝利！")
+            TeamType.COUNTER_TERRORIST -> broadcast("§9${config.counterTerroristTeamName}§eの勝利！")
+            null -> broadcast("§7時間切れ - §9${config.counterTerroristTeamName}§eの勝利！")
+        }
+
+        // TODO: スコア更新
+        // TODO: 経済システムの処理
+        // TODO: 次ラウンドへの移行またはゲーム終了
+    }
+
     /**
      * ゲームを強制終了
      */
@@ -286,7 +346,22 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
             player.sendMessage("${Man10Strike.PREFIX} $message")
         }
     }
-    
+
+    /**
+     * プレイヤーを準備してテレポート
+     */
+    private fun prepareAndTeleport(player: Player, location: org.bukkit.Location, message: String) {
+        // プレイヤーの状態をリセット
+        resetPlayerState(player)
+
+        // インベントリをクリア
+        clearPlayerInventory(player)
+
+        // テレポート
+        player.teleport(location)
+        player.sendMessage("${Man10Strike.PREFIX} $message")
+    }
+
     /**
      * プレイヤーの状態をリセット
      */
@@ -315,21 +390,6 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
     }
     
     /**
-     * プレイヤーを準備してテレポート
-     */
-    private fun prepareAndTeleport(player: Player, location: org.bukkit.Location, message: String) {
-        // プレイヤーの状態をリセット
-        resetPlayerState(player)
-        
-        // インベントリをクリア
-        clearPlayerInventory(player)
-        
-        // テレポート
-        player.teleport(location)
-        player.sendMessage("${Man10Strike.PREFIX} $message")
-    }
-    
-    /**
      * プレイヤーの移動を制限する
      */
     private fun freezePlayer(player: Player) {
@@ -354,68 +414,5 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         player.removePotionEffect(PotionEffectType.SLOW)
         player.removePotionEffect(PotionEffectType.JUMP)
     }
-    
-    /**
-     * ラウンド進行中の処理
-     */
-    private fun handleInProgress() {
-        // 残り時間の表示
-        when (roundSeconds) {
-            120, 90, 60 -> broadcast("§eラウンド終了まで §c${roundSeconds}秒")
-            30, 20, 10 -> {
-                broadcast("§eラウンド終了まで §c${roundSeconds}秒")
-                // アクションバーに残り時間を表示
-                val minutes = roundSeconds / 60
-                val seconds = roundSeconds % 60
-                val timeText = String.format("§e残り時間: §c%d:%02d", minutes, seconds)
-                players.values.forEach { player ->
-                    player.sendActionBar(timeText)
-                }
-            }
-            5, 4, 3, 2, 1 -> {
-                broadcast("§c§lラウンド終了まで ${roundSeconds}秒！")
-                // タイトル表示
-                players.values.forEach { player ->
-                    player.sendTitle("§c${roundSeconds}", "§7ラウンド終了まで", 0, 20, 0)
-                }
-            }
-            0 -> {
-                // 時間切れでラウンド終了
-                endRound(null)
-                return
-            }
-        }
-        
-        // 10秒以下の場合は毎秒アクションバーを更新
-        if (roundSeconds <= 10) {
-            val minutes = roundSeconds / 60
-            val seconds = roundSeconds % 60
-            val timeText = String.format("§e残り時間: §c%d:%02d", minutes, seconds)
-            players.values.forEach { player ->
-                player.sendActionBar(timeText)
-            }
-        }
-        
-        roundSeconds--
-        
-        // TODO: 生存チームチェック
-        // TODO: 爆弾設置/解除チェック
-    }
-    
-    /**
-     * ラウンドを終了する
-     */
-    private fun endRound(winnerTeam: TeamType?) {
-        broadcast("§6§l=== ラウンド終了 ===")
-        
-        when (winnerTeam) {
-            TeamType.TERRORIST -> broadcast("§c${config.terroristTeamName}§eの勝利！")
-            TeamType.COUNTER_TERRORIST -> broadcast("§9${config.counterTerroristTeamName}§eの勝利！")
-            null -> broadcast("§7時間切れ - §9${config.counterTerroristTeamName}§eの勝利！")
-        }
-        
-        // TODO: スコア更新
-        // TODO: 経済システムの処理
-        // TODO: 次ラウンドへの移行またはゲーム終了
-    }
+
 }
