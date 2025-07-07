@@ -8,17 +8,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 class GameManager(private val plugin: Man10Strike) {
     
-    // ゲームの状態
-    enum class GameState {
-        WAITING,      // プレイヤー待機中
-        STARTING,     // ゲーム開始準備中
-        IN_GAME,      // ゲーム中
-        ENDING        // ゲーム終了処理中
-    }
-    
-    // 現在のゲーム状態
-    var gameState: GameState = GameState.WAITING
-        private set
     
     // アクティブなゲーム
     private val activeGames = ConcurrentHashMap<UUID, Game>()
@@ -116,7 +105,7 @@ class GameManager(private val plugin: Man10Strike) {
      */
     private fun findAvailableGame(): Game? {
         return activeGames.values.firstOrNull { 
-            it.state == Game.State.WAITING && !it.isFull() 
+            it.canJoin()
         }
     }
     

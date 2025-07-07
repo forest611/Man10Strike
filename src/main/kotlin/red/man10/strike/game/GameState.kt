@@ -1,0 +1,11 @@
+package red.man10.strike.game
+
+/**
+ * ゲームの状態を表すEnum
+ */
+enum class GameState {
+    WAITING,       // プレイヤー待機中
+    STARTING,      // カウントダウン中/ゲーム開始準備中
+    IN_PROGRESS,   // ゲーム進行中
+    ENDING         // 終了処理中
+}

@@ -1,30 +1,19 @@
 package red.man10.strike.game
 
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.title.Title
 import org.bukkit.GameMode
 import org.bukkit.entity.Player
-import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scheduler.BukkitTask
 import red.man10.strike.Man10Strike
 import red.man10.strike.map.GameMap
-import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class Game(private val plugin: Man10Strike) {
     
-    enum class State {
-        WAITING,       // プレイヤー待機中
-        STARTING,      // カウントダウン中
-        IN_PROGRESS,   // ゲーム進行中
-        ENDING         // 終了処理中
-    }
-    
     val gameId: UUID = UUID.randomUUID()
-    var state: State = State.WAITING
-        private set
-    
+
+    private var state: GameState = GameState.WAITING
+
     // プレイヤー管理
     private val players = ConcurrentHashMap<UUID, Player>()
     private val maxPlayers = plugin.configManager.maxPlayersPerTeam * 2
@@ -34,9 +23,8 @@ class Game(private val plugin: Man10Strike) {
         private set
     
     // 現在のラウンド
-    var currentRound = 0
-        private set
-    
+    private var currentRound = 0
+
     // カウントダウンタスク
     private var countdownTask: BukkitTask? = null
     private var countdownSeconds = 30
@@ -46,19 +34,19 @@ class Game(private val plugin: Man10Strike) {
      */
     fun addPlayer(player: Player): Boolean {
         if (isFull()) return false
-        if (state != State.WAITING && state != State.STARTING) return false
+        if (state != GameState.WAITING && state != GameState.STARTING) return false
         
         players[player.uniqueId] = player
         broadcast("§e${player.name} §aがゲームに参加しました §7(${players.size}/$maxPlayers)")
         
         // カウントダウン中の場合は待機場所にテレポート
-        if (state == State.STARTING && map != null) {
+        if (state == GameState.STARTING && map != null) {
             val lobbySpawn = map!!.lobbySpawn
             prepareAndTeleport(player, lobbySpawn, "§a待機場所にテレポートしました")
         }
         
         // 最小人数に達したらカウントダウン開始
-        if (players.size >= plugin.configManager.minPlayers && state == State.WAITING) {
+        if (players.size >= plugin.configManager.minPlayers && state == GameState.WAITING) {
             startCountdown()
         }
         
@@ -75,7 +63,7 @@ class Game(private val plugin: Man10Strike) {
         broadcast("§e${player.name} §cがゲームから退出しました §7(${players.size}/$maxPlayers)")
         
         // 最小人数を下回ったらカウントダウンをキャンセル
-        if (players.size < plugin.configManager.minPlayers && state == State.STARTING) {
+        if (players.size < plugin.configManager.minPlayers && state == GameState.STARTING) {
             cancelCountdown()
         }
         
@@ -91,6 +79,22 @@ class Game(private val plugin: Man10Strike) {
      * ゲームが空かどうか
      */
     fun isEmpty(): Boolean = players.isEmpty()
+
+    /**
+     * ゲームに参加できるかどうか
+     */
+    fun canJoin(player: Player? = null): Boolean {
+        // ゲームが進行中でないこと
+        if (state != GameState.WAITING) return false
+
+        // プレイヤーが既に参加しているか
+        if (player != null && players.containsKey(player.uniqueId)) return false
+
+        // ゲームが満員でないこと
+        if (isFull()) return false
+
+        return true
+    }
     
     /**
      * ゲーム内のプレイヤーリストを取得
@@ -101,14 +105,14 @@ class Game(private val plugin: Man10Strike) {
      * ゲーム開始のカウントダウンを開始
      */
     private fun startCountdown() {
-        state = State.STARTING
+        state = GameState.STARTING
         
         // マップが設定されていない場合は選択
         if (map == null) {
             val selectedMap = plugin.gameManager.selectMapForGame(this)
             if (selectedMap == null) {
                 broadcast("§c利用可能なマップがありません")
-                state = State.WAITING
+                state = GameState.WAITING
                 return
             }
             setMap(selectedMap)
@@ -150,7 +154,7 @@ class Game(private val plugin: Man10Strike) {
      * カウントダウンをキャンセル
      */
     private fun cancelCountdown() {
-        state = State.WAITING
+        state = GameState.WAITING
         broadcast("§c最小人数を下回ったため、カウントダウンをキャンセルしました")
         
         // カウントダウンタスクをキャンセル
@@ -170,14 +174,14 @@ class Game(private val plugin: Man10Strike) {
     /**
      * ゲームを開始
      */
-    fun start() {
-        if (state != State.STARTING) return
+    private fun start() {
+        if (state != GameState.STARTING) return
         if (map == null) {
             broadcast("§cマップが設定されていないため、ゲームを開始できません")
             return
         }
         
-        state = State.IN_PROGRESS
+        state = GameState.IN_PROGRESS
         currentRound = 1
         broadcast("§6§l=== ゲーム開始！ ===")
         broadcast("§eマップ: §f${map!!.displayName}")
@@ -189,7 +193,7 @@ class Game(private val plugin: Man10Strike) {
      * ゲームを強制終了
      */
     fun forceEnd() {
-        state = State.ENDING
+        state = GameState.ENDING
         broadcast("§c§lゲームが強制終了されました")
         
         // カウントダウンタスクをキャンセル
