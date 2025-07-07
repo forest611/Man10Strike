@@ -37,6 +37,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
     // ゲームティックタスク（1秒ごとに実行）
     private var gameTickTask: BukkitTask? = null
     private var countdownSeconds = 30
+    private var waitingSeconds = 0 // 待機状態の経過秒数
     
     /**
      * プレイヤーを追加
@@ -58,6 +59,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         if (players.size >= config.minPlayers && state == GameState.WAITING) {
             state = GameState.STARTING
             countdownSeconds = 30
+            waitingSeconds = 0 // 待機時間をリセット
             broadcast("§a最小人数に達しました！30秒後にゲームを開始します")
             
             // プレイヤーを待機場所にテレポート
@@ -134,7 +136,13 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
             when (state) {
                 GameState.WAITING -> {
                     // 待機中の処理
-                    // 特に何もしない
+                    waitingSeconds++
+                    
+                    // 180秒（3分）経過したら強制終了
+                    if (waitingSeconds >= 180) {
+                        broadcast("§c待機時間が3分を超えたため、ゲームを終了します")
+                        forceEnd()
+                    }
                 }
                 GameState.STARTING -> {
                     // カウントダウン中の処理
