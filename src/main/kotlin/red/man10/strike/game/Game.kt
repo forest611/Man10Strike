@@ -41,6 +41,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
     private var countdownSeconds = 30
     private var waitingSeconds = 0 // 待機状態の経過秒数
     private var buyingSeconds = 0 // 購入フェーズの経過秒数
+    private var roundSeconds = 0 // ラウンドの経過秒数
     
     /**
      * プレイヤーを追加
@@ -150,7 +151,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
                 }
                 GameState.IN_PROGRESS -> {
                     // ゲーム進行中の処理
-                    // TODO: ラウンド時間の管理など
+                    handleInProgress()
                 }
                 GameState.ENDING -> {
                     // 終了処理中
@@ -238,6 +239,7 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
             0 -> {
                 // ラウンド開始
                 state = GameState.IN_PROGRESS
+                roundSeconds = config.roundTime // ラウンド時間を設定
                 broadcast("§c§l購入フェーズ終了！ ラウンド開始！")
                 
                 // 移動制限を解除
@@ -350,5 +352,69 @@ class Game(private val plugin: Man10Strike, val map : GameMap, configFileName: S
         // 鈍足効果を解除
         player.removePotionEffect(PotionEffectType.SLOW)
         player.removePotionEffect(PotionEffectType.JUMP)
+    }
+    
+    /**
+     * ラウンド進行中の処理
+     */
+    private fun handleInProgress() {
+        // 残り時間の表示
+        when (roundSeconds) {
+            120, 90, 60 -> broadcast("§eラウンド終了まで §c${roundSeconds}秒")
+            30, 20, 10 -> {
+                broadcast("§eラウンド終了まで §c${roundSeconds}秒")
+                // アクションバーに残り時間を表示
+                val minutes = roundSeconds / 60
+                val seconds = roundSeconds % 60
+                val timeText = String.format("§e残り時間: §c%d:%02d", minutes, seconds)
+                players.values.forEach { player ->
+                    player.sendActionBar(timeText)
+                }
+            }
+            5, 4, 3, 2, 1 -> {
+                broadcast("§c§lラウンド終了まで ${roundSeconds}秒！")
+                // タイトル表示
+                players.values.forEach { player ->
+                    player.sendTitle("§c${roundSeconds}", "§7ラウンド終了まで", 0, 20, 0)
+                }
+            }
+            0 -> {
+                // 時間切れでラウンド終了
+                endRound(null)
+                return
+            }
+        }
+        
+        // 10秒以下の場合は毎秒アクションバーを更新
+        if (roundSeconds <= 10) {
+            val minutes = roundSeconds / 60
+            val seconds = roundSeconds % 60
+            val timeText = String.format("§e残り時間: §c%d:%02d", minutes, seconds)
+            players.values.forEach { player ->
+                player.sendActionBar(timeText)
+            }
+        }
+        
+        roundSeconds--
+        
+        // TODO: 生存チームチェック
+        // TODO: 爆弾設置/解除チェック
+    }
+    
+    /**
+     * ラウンドを終了する
+     */
+    private fun endRound(winnerTeam: TeamType?) {
+        broadcast("§6§l=== ラウンド終了 ===")
+        
+        when (winnerTeam) {
+            TeamType.TERRORIST -> broadcast("§c${config.terroristTeamName}§eの勝利！")
+            TeamType.COUNTER_TERRORIST -> broadcast("§9${config.counterTerroristTeamName}§eの勝利！")
+            null -> broadcast("§7時間切れ - §9${config.counterTerroristTeamName}§eの勝利！")
+        }
+        
+        // TODO: スコア更新
+        // TODO: 経済システムの処理
+        // TODO: 次ラウンドへの移行またはゲーム終了
     }
 }
